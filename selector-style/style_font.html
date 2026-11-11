@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Style Picker</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Web Fonts for Presets -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <!-- Pretendard Web Font CDN -->
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#0a0a0a',
+                        panel: '#121214',
+                        panelHover: '#18181b',
+                        borderSubtle: '#262626',
+                        muted: '#737373',
+                        accent: '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #fafafa;
+            --muted: #737373;
+            --accent: #ffffff;
+            --border: #262626;
+            --panel: #121214;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: #fafafa;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #404040;
+        }
+
+        /* Light Theme Styles */
+        html:not(.dark) {
+            --bg: #f8fafc;
+            --fg: #0f172a;
+            --muted: #64748b;
+            --accent: #0f172a;
+            --border: #e2e8f0;
+            --panel: #ffffff;
+        }
+
+        html:not(.dark) body {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) header {
+            background-color: rgba(248, 250, 252, 0.92) !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) footer {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .bg-canvas {
+            background-color: #f8fafc !important;
+        }
+
+        html:not(.dark) .bg-panel {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .border-borderSubtle {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .text-white {
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) .text-neutral-100 {
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) .text-neutral-200 {
+            color: #1e293b !important;
+        }
+
+        html:not(.dark) .text-neutral-300 {
+            color: #334155 !important;
+        }
+
+        html:not(.dark) .text-neutral-400 {
+            color: #64748b !important;
+        }
+
+        html:not(.dark) .text-neutral-500 {
+            color: #94a3b8 !important;
+        }
+
+        html:not(.dark) .bg-neutral-900 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+
+        html:not(.dark) .bg-neutral-900:hover {
+            background-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .bg-neutral-800 {
+            background-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .border-neutral-800,
+        html:not(.dark) .border-neutral-700 {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .bg-\[\#0e0e10\] {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .border-borderSubtle\/60 {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .shadow-black\/50,
+        html:not(.dark) .shadow-black\/80 {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important;
+        }
+
+        html:not(.dark) .filter-btn:not(.bg-neutral-200) {
+            color: #64748b !important;
+        }
+
+        html:not(.dark) .filter-btn:not(.bg-neutral-200):hover {
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) .filter-btn.bg-neutral-200 {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+        }
+
+        html:not(.dark) #toast-notification > div {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        html:not(.dark) #toast-notification i {
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen antialiased selection:bg-neutral-200 selection:text-black flex flex-col">
+
+    <!-- 상단 헤더 영역 -->
+    <header class="sticky top-0 z-30 backdrop-blur-xl bg-canvas/90 border-b border-borderSubtle transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <button id="themeToggleBtn" type="button" title="Switch Theme (Light / Dark)" aria-label="Switch Theme"
+                            class="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-700 flex items-center justify-center text-white shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                            <i data-lucide="type" class="w-4 h-4 text-white"></i>
+                        </button>
+                        <span
+                            class="text-xs font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-neutral-900 text-neutral-300 border border-neutral-800">삼순동순
+                            기술</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-2">
+                        Font Style Picker
+                    </h1>
+                    <p class="text-sm text-neutral-400 mt-1 max-w-2xl">
+                        Design을 위한 10가지 preset Typography
+                    </p>
+                </div>
+
+                <!-- 컨트롤 및 카테고리 필터 영역 -->
+                <div class="flex flex-wrap items-center gap-2.5 self-start md:self-end">
+                    <div class="inline-flex rounded-lg bg-panel p-1 border border-borderSubtle">
+                        <button onclick="filterFonts('all')" id="filter-all"
+                            class="filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-neutral-200 text-neutral-950 font-semibold shadow-sm">
+                            All (<span id="count-all">0</span>)
+                        </button>
+                        <button onclick="filterFonts('en')" id="filter-en"
+                            class="filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-neutral-400 hover:text-white">
+                            English (<span id="count-en">0</span>)
+                        </button>
+                        <button onclick="filterFonts('kr')" id="filter-kr"
+                            class="filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-neutral-400 hover:text-white">
+                            Korean (<span id="count-kr">0</span>)
+                        </button>
+                    </div>
+
+                    <a href="style_color.html"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-panel hover:bg-neutral-800 text-neutral-300 border border-borderSubtle transition-all">
+                        <i data-lucide="palette" class="w-3.5 h-3.5 text-neutral-400"></i>
+                        <span>Color Picker 보기</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 대시보드 컨텐츠 -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 사용 팁 안내 배너 -->
+        <div
+            class="mb-8 p-3.5 rounded-xl bg-panel border border-borderSubtle flex flex-wrap items-center justify-between gap-4 text-xs text-neutral-400">
+            <div class="flex items-center gap-3">
+                <span class="flex h-2 w-2 rounded-full bg-neutral-300 animate-pulse"></span>
+                <span><strong class="text-neutral-200">Quick Guide:</strong> Bento 카드의 <strong
+                        class="text-neutral-200">Copy CSS</strong>를 누르면 '폰트 선언문' 복사, <strong
+                        class="text-neutral-200">Copy
+                        CDN</strong>을 누르면 'HTML 링크 태그' 복사.</span>
+            </div>
+            <div class="font-mono text-[11px] text-neutral-500">
+                <span id="banner-total-count">0</span> Presets • Achromatic Bento Grid
+            </div>
+        </div>
+
+        <!-- 폰트 Bento Grid 리스트 -->
+        <div id="font-container" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <!-- JS에서 동적으로 렌더링 -->
+        </div>
+    </main>
+
+    <!-- 푸터 영역 -->
+    <footer class="border-t border-borderSubtle py-6 mt-12 bg-canvas">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 gap-2">
+            <p>Font Style Picker &amp; Typograph — Built with Tailwind CSS &amp; Vanilla JS</p>
+            <p class="font-mono">Zero-Build • Achromatic Palette • Bento Grid</p>
+        </div>
+    </footer>
+
+    <!-- 우측 하단 토스트 메시지 -->
+    <div id="toast-notification"
+        class="fixed bottom-6 right-6 z-50 pointer-events-none transform translate-y-12 opacity-0 transition-all duration-300 ease-out">
+        <div
+            class="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-900/95 backdrop-blur-md border border-neutral-700/80 shadow-2xl shadow-black/80 text-sm text-neutral-100">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-white flex-shrink-0"></i>
+            <span id="toast-text" class="font-mono font-medium tracking-tight">Copied to clipboard</span>
+        </div>
+    </div>
+
+    <script>
+        const INITIAL_FONTS = [
+            {
+                id: 1,
+                name: "System Native (EN)",
+                category: "en",
+                badge: "Zero-Latency",
+                primaryFontName: "System UI",
+                primaryFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                secondaryFontName: "System Monospace",
+                secondaryFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                cdnLink: "<!-- 시스템 기본 내장 폰트 (별도 CDN 불필요) -->",
+                cssCode: "font-family: system-ui, -apple-system, sans-serif;\n/* Secondary Font */\nfont-family: ui-monospace, SFMono-Regular, monospace;",
+                headline: "Zero-Build Native Engine",
+                lead: "Client-side browser system fonts eliminate external network requests, ensuring instant first-contentful paint with zero layout shifts.",
+                secondaryText: "PORTFOLIO_NAV: $102,480.50 (+14.28%) • LATENCY: 0.12ms • STATUS: READY"
+            },
+            {
+                id: 2,
+                name: "Modern Geometric (EN)",
+                category: "en",
+                badge: "Bento",
+                primaryFontName: "Inter",
+                primaryFamily: "'Inter', system-ui, sans-serif",
+                secondaryFontName: "Fira Code",
+                secondaryFamily: "'Fira Code', monospace",
+                cdnLink: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">',
+                cssCode: "font-family: 'Inter', sans-serif;\n/* Secondary Font */\nfont-family: 'Fira Code', monospace;",
+                headline: "Cross-Market Volatility Matrix",
+                lead: "Dynamic regime divergence tracker with high-density bento cards and responsive metric gauges.",
+                secondaryText: "VOL_REGIME: EXTREME (Z-Score +2.84σ) • SPREAD_DELTA: 4.12 pts [99th %ile]"
+            },
+            {
+                id: 3,
+                name: "Swiss Grotesque (EN)",
+                category: "en",
+                badge: "Neo-Brutalism",
+                primaryFontName: "Plus Jakarta Sans",
+                primaryFamily: "'Plus Jakarta Sans', Arial, sans-serif",
+                secondaryFontName: "Space Mono",
+                secondaryFamily: "'Space Mono', monospace",
+                cdnLink: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+                cssCode: "font-family: 'Plus Jakarta Sans', sans-serif;\n/* Secondary Font */\nfont-family: 'Space Mono', monospace;",
+                headline: "OBJECTIVE CLARITY & RAW STRUCTURE",
+                lead: "Rigid asymmetric column grids with stark contrasts, brutal borders, and secondary readouts designed for maximum impact.",
+                secondaryText: "GRID_INDEX: 1,957.80 • TOLERANCE: ±0.02mm • BAUHAUS DISCIPLINE"
+            },
+            {
+                id: 4,
+                name: "Academic Serif (EN)",
+                category: "en",
+                badge: "Journal",
+                primaryFontName: "Newsreader",
+                primaryFamily: "'Newsreader', Georgia, serif",
+                secondaryFontName: "IBM Plex Mono",
+                secondaryFamily: "'IBM Plex Mono', monospace",
+                cdnLink: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">',
+                cssCode: "font-family: 'Newsreader', Georgia, serif;\nline-height: 1.7;\n/* Secondary Font */\nfont-family: 'IBM Plex Mono', monospace;",
+                headline: "On the Curvature of Implied Volatility Surfaces",
+                lead: "A rigorous mathematical exploration into the second-derivative curvature of option pricing chains and liquidity risk asymmetries.",
+                secondaryText: "E[R] = Σ P(sᵢ) · r(sᵢ) = +8.42% • ASYMPTOTIC: O(n⁻¹/²) with p < 0.001"
+            },
+            {
+                id: 5,
+                name: "Editorial KR (KR)",
+                category: "kr",
+                badge: "Korean",
+                primaryFontName: "Noto Sans KR",
+                primaryFamily: "'Noto Sans KR', -apple-system, sans-serif",
+                secondaryFontName: "JetBrains Mono",
+                secondaryFamily: "'JetBrains Mono', monospace",
+                cdnLink: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">',
+                cssCode: "font-family: 'Noto Sans KR', sans-serif;\n/* Secondary Font */\nfont-family: 'JetBrains Mono', monospace;",
+                headline: "빅테크 실질 FCF 마진 분석 리포트",
+                lead: "SEC 10-K 공시 원본에서 주식기준보상(SBC)과 서버 내용연수 왜곡을 발라내어 진정한 잉여현금흐름 창출 능력을 정밀 검증합니다.",
+                secondaryText: "FCF_MARGIN: 28.4% (조정치 -520bp) • CFO: $14.2B • CAPEX: $4.8B"
+            },
+            {
+                id: 6,
+                name: "Neo Gothic KR (KR)",
+                category: "kr",
+                badge: "Modern Web",
+                primaryFontName: "Pretendard",
+                primaryFamily: "'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif",
+                secondaryFontName: "IBM Plex Mono",
+                secondaryFamily: "'IBM Plex Mono', monospace",
+                cdnLink: '<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">',
+                cssCode: "font-family: 'Pretendard', -apple-system, sans-serif;\n/* Secondary Font */\nfont-family: 'IBM Plex Mono', monospace;",
+                headline: "자산 포트폴리오 실시간 리밸런싱",
+                lead: "자산군 간 상관관계 행렬과 실시간 변동성 군집을 추적하여 다운사이드 리스크를 방어하는 정밀 퀀트 엔진을 구동합니다.",
+                secondaryText: "총 평가자산: ₩148,250,000 • 샤프 지수: 2.18 • MDD: -6.40%"
+            },
+            {
+                id: 7,
+                name: "Literary Paper KR (KR)",
+                category: "kr",
+                badge: "Essay",
+                primaryFontName: "Noto Serif KR",
+                primaryFamily: "'Noto Serif KR', Georgia, serif",
+                secondaryFontName: "Space Mono",
+                secondaryFamily: "'Space Mono', monospace",
+                cdnLink: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+                cssCode: "font-family: 'Noto Serif KR', Georgia, serif;\nline-height: 1.8;\n/* Secondary Font */\nfont-family: 'Space Mono', monospace;",
+                headline: "기술의 정밀함과 활자의 미학",
+                lead: "과도한 시각적 소음을 걷어내고 활자 본연의 비례와 문장 호흡에 집중하여 오랜 시간 읽어도 피로하지 않은 사유의 공간을 구축합니다.",
+                secondaryText: "READABILITY_SCORE: 98.4pt • AVG_READ_TIME: 8m 45s (완독률 82%)"
+            },
+            {
+                id: 8,
+                name: "Terminal Mono (ALL)",
+                category: "en",
+                badge: "CLI",
+                primaryFontName: "JetBrains Mono",
+                primaryFamily: "'JetBrains Mono', monospace",
+                secondaryFontName: "JetBrains Mono",
+                secondaryFamily: "'JetBrains Mono', monospace",
+                cdnLink: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">',
+                cssCode: "font-family: 'JetBrains Mono', monospace;\nletter-spacing: -0.01em;\ntext-transform: uppercase;",
+                headline: "SYS.CORE: DECK_EXEC",
+                lead: "DIRECT MEMORY BUFFER STREAM. ZERO HIGH-LEVEL ABSTRACTION. ALL DATA POINTS RENDERED WITH FIXED-WIDTH COLUMN PRECISION.",
+                secondaryText: "BUFFER_TX: 0.042ms • STATUS: 200_OK • PACKET_LOSS: 0.000% [READY]"
+            }
+        ];
+
+        let currentFilter = 'all';
+        let toastTimeout = null;
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notification');
+            const text = document.getElementById('toast-text');
+            text.innerText = msg;
+            toast.classList.remove('translate-y-12', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-12', 'opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, successMsg) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(successMsg);
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast(successMsg);
+            });
+        }
+
+        function copyFontCSS(fontId) {
+            const font = INITIAL_FONTS.find(f => f.id === fontId);
+            if (font) {
+                copyToClipboard(font.cssCode, 'Copied: Font CSS');
+            }
+        }
+
+        function copyFontCDN(fontId) {
+            const font = INITIAL_FONTS.find(f => f.id === fontId);
+            if (font) {
+                copyToClipboard(font.cdnLink, 'Copied: CDN <link>');
+            }
+        }
+
+        function updateCounters() {
+            const total = INITIAL_FONTS.length;
+            const enCount = INITIAL_FONTS.filter(f => f.category === 'en').length;
+            const krCount = INITIAL_FONTS.filter(f => f.category === 'kr').length;
+
+            const elAll = document.getElementById('count-all');
+            const elEn = document.getElementById('count-en');
+            const elKr = document.getElementById('count-kr');
+            const elBanner = document.getElementById('banner-total-count');
+            const elHeader = document.getElementById('header-preset-count');
+
+            if (elAll) elAll.innerText = total;
+            if (elEn) elEn.innerText = enCount;
+            if (elKr) elKr.innerText = krCount;
+            if (elBanner) elBanner.innerText = total;
+            if (elHeader) elHeader.innerText = total;
+        }
+
+        function filterFonts(cat) {
+            currentFilter = cat;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-neutral-400 hover:text-white";
+            });
+            const activeBtn = document.getElementById(`filter-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = "filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-neutral-200 text-neutral-950 font-semibold shadow-sm";
+            }
+            renderFonts();
+        }
+
+        function renderFonts() {
+            updateCounters();
+            const container = document.getElementById('font-container');
+            container.innerHTML = '';
+
+            const filtered = INITIAL_FONTS.filter(f => {
+                if (currentFilter === 'all') return true;
+                return f.category === currentFilter;
+            });
+
+            filtered.forEach(font => {
+                const card = document.createElement('div');
+                card.className = "rounded-2xl bg-panel border border-borderSubtle hover:border-neutral-700 transition-all duration-200 overflow-hidden shadow-xl shadow-black/50";
+
+                card.innerHTML = `
+                    <div class="p-5 sm:p-6 flex flex-col gap-4">
+                        <!-- 카드 상단 Bento 메타 헤더 -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-borderSubtle">
+                            <div class="flex items-center gap-3">
+                                <span class="w-7 h-7 rounded-lg bg-neutral-900 text-neutral-300 font-mono text-xs flex items-center justify-center font-bold border border-neutral-800 flex-shrink-0">
+                                    0${font.id}
+                                </span>
+                                <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                                    ${font.name}
+                                    <span class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800 font-normal">
+                                        ${font.badge}
+                                    </span>
+                                </h2>
+                            </div>
+
+                            <!-- 우측 액션 버튼들 -->
+                            <div class="flex items-center gap-2 self-start sm:self-center flex-shrink-0">
+                                <button onclick="copyFontCSS(${font.id})"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 transition-all active:scale-95">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5 text-neutral-400"></i>
+                                    <span>Copy CSS</span>
+                                </button>
+                                <button onclick="copyFontCDN(${font.id})"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 transition-all active:scale-95">
+                                    <i data-lucide="code-2" class="w-3.5 h-3.5 text-neutral-400"></i>
+                                    <span>Copy CDN</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 폰트 샘플 Bento 패널 영역 (Primary & Secondary 동일 CSS 구조) -->
+                        <div class="flex flex-col gap-3">
+                            <!-- 1. Primary Font Panel -->
+                            <div class="p-4 sm:p-5 rounded-xl bg-[#0e0e10] border border-borderSubtle">
+                                <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-borderSubtle/60 text-xs font-mono">
+                                    <span class="text-neutral-400 flex items-center gap-2 font-medium">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
+                                        Primary Font: <span class="text-white font-semibold">${font.primaryFontName}</span>
+                                    </span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 border border-borderSubtle">Display &amp; Body</span>
+                                </div>
+                                <div style="font-family: ${font.primaryFamily};" class="text-left space-y-1.5">
+                                    <h3 class="text-xl sm:text-2xl font-bold tracking-tight text-white leading-snug">
+                                        ${font.headline}
+                                    </h3>
+                                    <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed">
+                                        ${font.lead}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- 2. Secondary Font Panel (Primary Font Panel과 동일한 CSS 규격) -->
+                            <div class="p-4 sm:p-5 rounded-xl bg-[#0e0e10] border border-borderSubtle">
+                                <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-borderSubtle/60 text-xs font-mono">
+                                    <span class="text-neutral-400 flex items-center gap-2 font-medium">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
+                                        Secondary Font: <span class="text-white font-semibold">${font.secondaryFontName}</span>
+                                    </span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 border border-borderSubtle">Subtext &amp; Data</span>
+                                </div>
+                                <div style="font-family: ${font.secondaryFamily};" class="text-left">
+                                    <div class="text-xs sm:text-sm font-medium tracking-tight text-neutral-200 leading-relaxed">
+                                        ${font.secondaryText}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Dark / Light Theme Toggle
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+
+            const toggleBtn = document.getElementById('themeToggleBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    showToast(isDark ? 'Dark mode enabled' : 'Light mode enabled');
+                });
+            }
+        }
+
+        initTheme();
+
+        window.onload = function () {
+            renderFonts();
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2027 Calendar of Samsoon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+            --radius: 1.5rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            animation: fadeInUp 0.6s ease-out backwards;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .image-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+            display: block;
+        }
+
+        .card:hover .image-container img {
+            transform: scale(1.08);
+        }
+
+        .content {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .month {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .theme {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            margin-bottom: 0;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            padding: 1.25rem;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            max-height: 92vh;
+            border-radius: var(--radius);
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.28);
+            position: relative;
+            transform: scale(0.94) translateY(15px);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 0.85rem;
+            right: 0.85rem;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            background: #ffffff;
+            transform: scale(1.08);
+        }
+
+        .modal-image-wrap {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #f1f5f9;
+            overflow: hidden;
+        }
+
+        .modal-image-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .modal-content {
+            padding: 1.5rem 1.75rem 2rem;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-header .modal-month-name {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-header .modal-theme-text {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            margin-bottom: 0;
+        }
+
+        /* Calendar Grid inside Modal */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.35rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .cal-weekday {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 0.4rem 0;
+            letter-spacing: 0.04em;
+        }
+
+        .cal-weekday.sun {
+            color: #ef4444;
+        }
+
+        .cal-weekday.sat {
+            color: #3b82f6;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: 400;
+            border-radius: 0.5rem;
+            color: var(--text-main);
+            transition: background-color 0.15s;
+        }
+
+        .cal-day.empty {
+            visibility: hidden;
+        }
+
+        .cal-day.sun {
+            color: #ef4444;
+        }
+
+        .cal-day.sat {
+            color: #3b82f6;
+        }
+
+        .cal-day:not(.empty):hover {
+            background-color: #f1f5f9;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1 id="headerTitle">Samsoon 2027</h1>
+        <p class="subtitle" id="headerSubtitle">12 Months of Adorable Maltipoo Vibes</p>
+    </header>
+
+    <main class="grid" id="calendarGrid"></main>
+
+    <footer>
+        <p>삼순동순 기술</p>
+    </footer>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+        <div class="modal-container" role="dialog" aria-modal="true">
+            <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close modal">&times;</button>
+            <div class="modal-image-wrap">
+                <img id="modalImage" src="" alt="">
+            </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-month-name" id="modalMonthName"></h2>
+                    <p class="modal-theme-text" id="modalTheme"></p>
+                </div>
+                <div id="modalCalendar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Calendar Configuration & Months Data (JSON structure)
+        const calendarData = {
+            year: 2027,
+            title: "2027 Calendar of Samsoon",
+            subtitle: "12 Months of Adorable Maltipoo Vibes",
+            months: [
+                { month: 1, name: "January", theme: "Alert and Proud", image: "assets/01.png" },
+                { month: 2, name: "February", theme: "Gentle and Relaxed", image: "assets/02.png" },
+                { month: 3, name: "March", theme: "Playful and Curious", image: "assets/03.png" },
+                { month: 4, name: "April", theme: "Elegant Profile", image: "assets/04.png" },
+                { month: 5, name: "May", theme: "Confident Stance", image: "assets/05.png" },
+                { month: 6, name: "June", theme: "Adorable Begging", image: "assets/06.png" },
+                { month: 7, name: "July", theme: "Playful Bow", image: "assets/07.png" },
+                { month: 8, name: "August", theme: "Peaceful Sleep", image: "assets/08.png" },
+                { month: 9, name: "September", theme: "Curious Tilt", image: "assets/09.png" },
+                { month: 10, name: "October", theme: "Alert and Happy", image: "assets/10.png" },
+                { month: 11, name: "November", theme: "Calm and Gentle", image: "assets/11.png" },
+                { month: 12, name: "December", theme: "Celebratory Spirit", image: "assets/12.png" }
+            ]
+        };
+
+        /**
+         * Dynamically generates the monthly calendar grid for any given year and month.
+         * @param {number} year - The target year (e.g. 2027)
+         * @param {number} month - Month number (1 ~ 12)
+         * @returns {string} - HTML string representing the calendar grid
+         */
+        function generateCalendarHtml(year, month) {
+            const firstDayIndex = new Date(year, month - 1, 1).getDay();
+            const totalDays = new Date(year, month, 0).getDate();
+            const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+            let html = '<div class="calendar-grid">';
+
+            weekdays.forEach((day, index) => {
+                let cls = 'cal-weekday';
+                if (index === 0) cls += ' sun';
+                if (index === 6) cls += ' sat';
+                html += `<div class="${cls}">${day}</div>`;
+            });
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                html += '<div class="cal-day empty"></div>';
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayOfWeek = (firstDayIndex + day - 1) % 7;
+                let cls = 'cal-day';
+                if (dayOfWeek === 0) cls += ' sun';
+                if (dayOfWeek === 6) cls += ' sat';
+                html += `<div class="${cls}">${day}</div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        // Modal Elements
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalImage = document.getElementById('modalImage');
+        const modalMonthName = document.getElementById('modalMonthName');
+        const modalTheme = document.getElementById('modalTheme');
+        const modalCalendar = document.getElementById('modalCalendar');
+
+        function openModal(monthItem) {
+            modalImage.src = monthItem.image;
+            modalImage.alt = `${monthItem.name} Samsoon`;
+            modalMonthName.textContent = `${calendarData.year} · ${monthItem.name.toUpperCase()}`;
+            modalTheme.textContent = monthItem.theme;
+            modalCalendar.innerHTML = generateCalendarHtml(calendarData.year, monthItem.month);
+
+            modalOverlay.classList.add('active');
+            modalOverlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            modalOverlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Render Calendar Grid
+        function renderCalendar(data) {
+            const grid = document.getElementById('calendarGrid');
+            document.getElementById('headerTitle').textContent = data.title || `Samsoon ${data.year}`;
+            document.getElementById('headerSubtitle').textContent = data.subtitle || `${data.year} Calendar`;
+
+            grid.innerHTML = data.months.map((item, index) => `
+                <div class="card" data-month="${item.month}" style="animation-delay: ${(index * 0.08 + 0.1).toFixed(2)}s">
+                    <div class="image-container">
+                        <img src="${item.image}" alt="${item.name} Samsoon" loading="lazy">
+                    </div>
+                    <div class="content">
+                        <p class="month">${String(item.month).padStart(2, '0')}. ${item.name}</p>
+                        <p class="theme">${item.theme}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            grid.querySelectorAll('.card').forEach(cardEl => {
+                cardEl.addEventListener('click', () => {
+                    const m = parseInt(cardEl.dataset.month, 10);
+                    const item = data.months.find(mItem => mItem.month === m);
+                    if (item) openModal(item);
+                });
+            });
+        }
+
+        // Initialize with calendarData
+        renderCalendar(calendarData);
+    </script>
+
+</body>
+
+</html>

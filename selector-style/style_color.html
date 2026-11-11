@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette Picker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        canvas: '#09090b',
+                        panel: '#121215',
+                        panelHover: '#18181c',
+                        borderSubtle: '#27272a',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            color: #f4f4f5;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 체크보드 패턴 (투명도 있는 색상 확인용) */
+        .bg-checkerboard {
+            background-image:
+                linear-gradient(45deg, #1f1f23 25%, transparent 25%),
+                linear-gradient(-45deg, #1f1f23 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #1f1f23 75%),
+                linear-gradient(-45deg, transparent 75%, #1f1f23 75%);
+            background-size: 12px 12px;
+            background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+        }
+
+        /* 네이티브 컬러 피커를 스와치 영역에 투명하게 덮어씌움 */
+        .swatch-color-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46;
+        }
+
+        /* Light Theme Styles */
+        html:not(.dark) {
+            --bg: #f8fafc;
+            --fg: #09090b;
+            --border: #e4e4e7;
+            --panel: #ffffff;
+        }
+
+        html:not(.dark) body {
+            background-color: #f8fafc !important;
+            color: #09090b !important;
+        }
+
+        html:not(.dark) header {
+            background-color: rgba(248, 250, 252, 0.92) !important;
+            border-color: #e4e4e7 !important;
+        }
+
+        html:not(.dark) footer {
+            background-color: #f8fafc !important;
+            border-color: #e4e4e7 !important;
+        }
+
+        html:not(.dark) .bg-canvas {
+            background-color: #f8fafc !important;
+        }
+
+        html:not(.dark) .bg-panel {
+            background-color: #ffffff !important;
+            border-color: #e4e4e7 !important;
+        }
+
+        html:not(.dark) .bg-panelHover {
+            background-color: #f4f4f5 !important;
+        }
+
+        html:not(.dark) .border-borderSubtle {
+            border-color: #e4e4e7 !important;
+        }
+
+        html:not(.dark) .text-white {
+            color: #09090b !important;
+        }
+
+        html:not(.dark) .text-zinc-100 {
+            color: #09090b !important;
+        }
+
+        html:not(.dark) .text-zinc-200 {
+            color: #18181b !important;
+        }
+
+        html:not(.dark) .text-zinc-300 {
+            color: #27272a !important;
+        }
+
+        html:not(.dark) .text-zinc-400 {
+            color: #52525b !important;
+        }
+
+        html:not(.dark) .text-zinc-500 {
+            color: #71717a !important;
+        }
+
+        html:not(.dark) .bg-zinc-900 {
+            background-color: #f4f4f5 !important;
+            border-color: #e4e4e7 !important;
+            color: #27272a !important;
+        }
+
+        html:not(.dark) .bg-zinc-800 {
+            background-color: #e4e4e7 !important;
+            border-color: #d4d4d8 !important;
+            color: #09090b !important;
+        }
+
+        html:not(.dark) .bg-zinc-800:hover {
+            background-color: #d4d4d8 !important;
+        }
+
+        html:not(.dark) .border-zinc-800,
+        html:not(.dark) .border-zinc-700 {
+            border-color: #e4e4e7 !important;
+        }
+
+        html:not(.dark) .shadow-black\/40,
+        html:not(.dark) .shadow-black\/50,
+        html:not(.dark) .shadow-black\/60,
+        html:not(.dark) .shadow-black\/80 {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important;
+        }
+
+        html:not(.dark) .filter-btn:not(.bg-zinc-800) {
+            color: #52525b !important;
+        }
+
+        html:not(.dark) .filter-btn:not(.bg-zinc-800):hover {
+            color: #09090b !important;
+        }
+
+        html:not(.dark) .filter-btn.bg-zinc-800 {
+            background-color: #09090b !important;
+            color: #ffffff !important;
+        }
+
+        html:not(.dark) #toast-notification>div {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #e4e4e7 !important;
+            color: #09090b !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen antialiased selection:bg-indigo-500 selection:text-white flex flex-col">
+
+    <!-- 상단 헤더 영역 -->
+    <header class="sticky top-0 z-30 backdrop-blur-xl bg-canvas/80 border-b border-borderSubtle transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <button id="themeToggleBtn" type="button" title="Switch Theme (Light / Dark)"
+                            aria-label="Switch Theme"
+                            class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                            <i data-lucide="palette" class="w-4 h-4 text-white"></i>
+                        </button>
+                        <span
+                            class="text-xs font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">삼순동순
+                            기술</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-2">
+                        Color Palette Picker
+                    </h1>
+                    <p class="text-sm text-zinc-400 mt-1 max-w-2xl">
+                        Design을 위한 10가지 preset color palette
+                    </p>
+                </div>
+
+                <!-- 컨트롤 및 필터 영역 -->
+                <div class="flex flex-wrap items-center gap-2.5 self-start md:self-end">
+                    <div class="inline-flex rounded-lg bg-panel p-1 border border-borderSubtle">
+                        <button onclick="filterPalettes('all')" id="filter-all"
+                            class="filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-zinc-800 text-white shadow-sm">
+                            All (10)
+                        </button>
+                        <button onclick="filterPalettes('dark')" id="filter-dark"
+                            class="filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-zinc-400 hover:text-white">
+                            Dark (5)
+                        </button>
+                        <button onclick="filterPalettes('light')" id="filter-light"
+                            class="filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-zinc-400 hover:text-white">
+                            Light (5)
+                        </button>
+                    </div>
+
+                    <button onclick="resetAllPalettes()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-panel hover:bg-zinc-800 text-zinc-300 border border-borderSubtle transition-all active:scale-95"
+                        title="모든 색상 초기화">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>프리셋 초기화</span>
+                    </button>
+
+                    <a href="style_font.html"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-panel hover:bg-zinc-800 text-zinc-300 border border-borderSubtle transition-all">
+                        <i data-lucide="type" class="w-3.5 h-3.5 text-sky-400"></i>
+                        <span>Typography 보기</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 대시보드 컨텐츠 -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 사용 팁 안내 배너 -->
+        <div
+            class="mb-8 p-3.5 rounded-xl bg-zinc-300/60 border border-zinc-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-400">
+            <div class="flex items-center gap-3">
+                <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span><strong class="text-zinc-200">Quick Guide:</strong> 상단 <strong class="text-zinc-200">컬러
+                        스와치</strong>를 클릭하면 Color Picker가 열리며, 하단 <strong class="text-zinc-200">HEX 코드 텍스트</strong>를 클릭하면
+                    클립보드에 복사됩니다.</span>
+            </div>
+        </div>
+
+        <!-- 팔레트 리스트 그리드 -->
+        <div id="palette-container" class="grid grid-cols-1 gap-8">
+            <!-- JS에서 동적으로 렌더링됩니다 -->
+        </div>
+    </main>
+
+    <!-- 푸터 영역 -->
+    <footer class="border-t border-borderSubtle py-6 mt-12 bg-canvas">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-2">
+            <p>Color Palette Picker — Built with Tailwind CSS & Vanilla JS</p>
+            <p class="font-mono">Click Swatch to Edit • Click HEX to Copy</p>
+        </div>
+    </footer>
+
+    <!-- 우측 하단 토스트 메시지 (초기 숨김 상태) -->
+    <div id="toast-notification"
+        class="fixed bottom-6 right-6 z-50 pointer-events-none transform translate-y-12 opacity-0 transition-all duration-300 ease-out">
+        <div
+            class="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 shadow-2xl shadow-black/80 text-sm text-zinc-100">
+            <span id="toast-color-dot"
+                class="w-4 h-4 rounded-full border border-white/20 shadow-inner flex-shrink-0"></span>
+            <span id="toast-text" class="font-mono font-medium tracking-tight">Copied: #FFFFFF</span>
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 ml-1"></i>
+        </div>
+    </div>
+
+    <script>
+        // 원본 프리셋 데이터 (요구사항 8개 + 추가 라이트 컬러 팔레트 2개 = 총 10개)
+        const INITIAL_PALETTES = [
+            {
+                id: 1,
+                name: "Achromatic",
+                mode: "dark",
+                badge: "Minimal / Quant",
+                description: "무채색 명도 대비만 사용하는 극단적 미니멀 및 기대수익률/히트맵 계산기 표준",
+                previewTitle: "Expected Return Matrix",
+                previewMetric: "+18.42%",
+                previewSub: "Sharpe Ratio: 2.41 • Volatility: 8.2%",
+                previewBtn: "Calculate",
+                tokens: [
+                    { key: "--bg", hex: "#0a0a0a", label: "Background" },
+                    { key: "--fg", hex: "#fafafa", label: "Foreground" },
+                    { key: "--muted", hex: "#737373", label: "Muted" },
+                    { key: "--accent", hex: "#ffffff", label: "Accent" }
+                ]
+            },
+            {
+                id: 2,
+                name: "Paper Sepia",
+                mode: "light",
+                badge: "Classic Editorial",
+                description: "양장본·수제 종이 질감의 웜 베이지와 에스프레소 브라운, 테라코타 포인트를 결합한 클래식 에디토리얼 테마",
+                previewTitle: "The Alpine Dispatch",
+                previewMetric: "Vol. 42 • No. 8",
+                previewSub: "Essays on Architecture & Typography",
+                previewBtn: "Read Issue",
+                tokens: [
+                    { key: "--bg", hex: "#f5efe6", label: "Background" },
+                    { key: "--fg", hex: "#2b2520", label: "Foreground" },
+                    { key: "--border", hex: "#dcd3c4", label: "Border" },
+                    { key: "--accent", hex: "#c85a17", label: "Accent (Terracotta)" }
+                ]
+            },
+            {
+                id: 3,
+                name: "Bloomberg Amber",
+                mode: "dark",
+                badge: "Terminal / CLI",
+                description: "순수 블랙 배경에 호박색(Amber)과 형광 그린을 배합한 클래식 금융 터미널 및 CLI 스크래퍼 테마",
+                previewTitle: "US10Y YIELD <GOVT>",
+                previewMetric: "4.2180 %",
+                previewSub: "SESSION OPEN • VOL 1,402,910",
+                previewBtn: "EXEC <GO>",
+                tokens: [
+                    { key: "--bg", hex: "#000000", label: "Background" },
+                    { key: "--fg", hex: "#ff9900", label: "Foreground" },
+                    { key: "--muted", hex: "#555555", label: "Muted" },
+                    { key: "--accent", hex: "#00ff66", label: "Accent" }
+                ]
+            },
+            {
+                id: 4,
+                name: "Quant Green Red",
+                mode: "dark",
+                badge: "Algorithmic Trading",
+                description: "Charcoal 배경 위에 매수/수익(에메랄드 그린)과 매도/손실(로즈 레드)의 양방향 시인성을 극대화한 트레이딩 테마",
+                previewTitle: "BTC-PERP Orderbook",
+                previewMetric: "$94,280.50",
+                previewSub: "Long +4.2% vs Short Liq -1.8%",
+                previewBtn: "Long / Buy",
+                tokens: [
+                    { key: "--bg", hex: "#1c1c1c", label: "Background" },
+                    { key: "--fg", hex: "#e2e8f0", label: "Foreground" },
+                    { key: "--accent", hex: "#10b981", label: "Accent (Buy)" },
+                    { key: "--danger", hex: "#f43f5e", label: "Danger (Sell)" }
+                ]
+            },
+            {
+                id: 5,
+                name: "Swiss International",
+                mode: "light",
+                badge: "Grid Typography",
+                description: "오프화이트 배경과 강렬한 버밀리온(주홍색) 포인트를 결합한 스위스 타이포그래피 및 그리드 레이아웃 테마",
+                previewTitle: "Zürich Kunsthalle 05",
+                previewMetric: "1957—2026",
+                previewSub: "Modular Grid System & Objective Clarity",
+                previewBtn: "Exhibition",
+                tokens: [
+                    { key: "--bg", hex: "#f4f4f0", label: "Background" },
+                    { key: "--fg", hex: "#111111", label: "Foreground" },
+                    { key: "--muted", hex: "#888888", label: "Muted" },
+                    { key: "--accent", hex: "#ff3300", label: "Accent" }
+                ]
+            },
+            {
+                id: 6,
+                name: "Neo-Brutal Pop",
+                mode: "light",
+                badge: "Neo-Brutalism",
+                description: "칠흑 같은 외곽선(#000000)과 고채도 원색(옐로우/블루) 면 분할을 활용한 네오 브루탈리즘 테마",
+                previewTitle: "DROP #09 LIVE NOW",
+                previewMetric: "SOLD 89%",
+                previewSub: "Hard Shadows • Raw Borders • High Contrast",
+                previewBtn: "MINT PASS",
+                tokens: [
+                    { key: "--bg", hex: "#fffdf5", label: "Background" },
+                    { key: "--fg", hex: "#000000", label: "Foreground" },
+                    { key: "--accent", hex: "#ffde00", label: "Accent" },
+                    { key: "--secondary", hex: "#3b82f6", label: "Secondary" }
+                ]
+            },
+            {
+                id: 7,
+                name: "Cybernetic Neon",
+                mode: "dark",
+                badge: "WebGL / 3D Shader",
+                description: "Three.js 셰이더, 파티클 및 WebGL 3D 아티팩트의 발광(Glow) 효과를 극대화하는 사이버펑크 네온 테마",
+                previewTitle: "NEURAL_SYNTH v9.0",
+                previewMetric: "144 FPS",
+                previewSub: "Raymarching Bloom • GPU Compute Active",
+                previewBtn: "Initialize",
+                tokens: [
+                    { key: "--bg", hex: "#050508", label: "Background" },
+                    { key: "--fg", hex: "#f8fafc", label: "Foreground" },
+                    { key: "--accent", hex: "#00f0ff", label: "Accent" },
+                    { key: "--secondary", hex: "#7000ff", label: "Secondary" }
+                ]
+            },
+            {
+                id: 8,
+                name: "Frosted Slate",
+                mode: "dark",
+                badge: "Modern SaaS / Glass",
+                description: "반투명 레이어(rgba)와 슬레이트 블루 톤을 결합한 글래스모피즘 및 모던 SaaS 대시보드 테마",
+                previewTitle: "Cloud Cluster Telemetry",
+                previewMetric: "99.98% SLA",
+                previewSub: "Active Nodes: 32 • Latency: 14ms",
+                previewBtn: "Deploy App",
+                tokens: [
+                    { key: "--bg", hex: "#0f172a", label: "Background" },
+                    { key: "--fg", hex: "#f8fafc", label: "Foreground" },
+                    { key: "--surface", hex: "#233044", displayValue: "rgba(255, 255, 255, 0.08)", label: "Surface (Glass)" },
+                    { key: "--accent", hex: "#38bdf8", label: "Accent" }
+                ]
+            },
+            {
+                id: 9,
+                name: "Nordic Daylight",
+                mode: "light",
+                badge: "Light Preset +1",
+                description: "북유럽풍 쿨 화이트 배경과 슬레이트 네이비 텍스트, 청량한 코발트 블루를 매치한 클린 B2B 워크스페이스 라이트 테마",
+                previewTitle: "Sprint Roadmap Q3",
+                previewMetric: "24 / 26 Done",
+                previewSub: "Product Design System • High Legibility",
+                previewBtn: "New Issue",
+                tokens: [
+                    { key: "--bg", hex: "#f8fafc", label: "Background" },
+                    { key: "--fg", hex: "#0f172a", label: "Foreground" },
+                    { key: "--border", hex: "#cbd5e1", label: "Border" },
+                    { key: "--accent", hex: "#2563eb", label: "Accent" }
+                ]
+            },
+            {
+                id: 10,
+                name: "Botanical Sage",
+                mode: "light",
+                badge: "Light Preset +2",
+                description: "자연스러운 리넨 크림 톤과 깊은 포레스트 그린을 조합하여 장시간 열람 시 눈의 피로도를 낮춘 웰니스·문서 도구용 라이트 테마",
+                previewTitle: "Mindful Focus Log",
+                previewMetric: "4h 35m",
+                previewSub: "Deep Reading Mode • Zero Eye Strain",
+                previewBtn: "Start Session",
+                tokens: [
+                    { key: "--bg", hex: "#f6f7f2", label: "Background" },
+                    { key: "--fg", hex: "#1b241e", label: "Foreground" },
+                    { key: "--muted", hex: "#7c8c80", label: "Muted" },
+                    { key: "--accent", hex: "#2d6a4f", label: "Accent" }
+                ]
+            }
+        ];
+
+        // 상태 관리
+        let palettes = JSON.parse(JSON.stringify(INITIAL_PALETTES));
+        let currentFilter = 'all';
+        let toastTimeout = null;
+
+        // HEX 색상의 밝기(Luminance)를 계산하여 스와치 내부 아이콘 대비 색상 결정
+        function getContrastColor(hex) {
+            if (!hex || !hex.startsWith('#') || hex.length < 7) return '#ffffff';
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return yiq >= 145 ? '#09090b' : '#ffffff';
+        }
+
+        // 클립보드 복사 함수 (navigator.clipboard.writeText 우선 사용 및 폴백)
+        async function copyToClipboard(text, colorHex = '#ffffff') {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.opacity = "0";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+                showToast(text, colorHex);
+            } catch (err) {
+                // iFrame 제한 환경 등을 대비한 안전한 폴백 처리
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast(text, colorHex);
+            }
+        }
+
+        // 토스트 메시지 표시 (1.8초 후 자동 숨김)
+        function showToast(copiedText, colorHex) {
+            const toast = document.getElementById('toast-notification');
+            const toastText = document.getElementById('toast-text');
+            const toastDot = document.getElementById('toast-color-dot');
+
+            toastText.textContent = copiedText.includes('Mode') || copiedText.includes('Restored')
+                ? copiedText
+                : `Copied: ${copiedText}`;
+            toastDot.style.backgroundColor = colorHex && colorHex.startsWith('#') ? colorHex : '#6366f1';
+
+            toast.classList.remove('translate-y-12', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-12', 'opacity-0');
+            }, 1800);
+        }
+
+        // 팔레트의 토큰 값을 추출하는 헬퍼
+        function getTokenMap(palette) {
+            const map = {};
+            palette.tokens.forEach(t => {
+                map[t.key] = t.hex;
+            });
+            return {
+                bg: map['--bg'] || '#0a0a0a',
+                fg: map['--fg'] || '#ffffff',
+                accent: map['--accent'] || '#3b82f6',
+                fourth: map['--muted'] || map['--border'] || map['--danger'] || map['--secondary'] || map['--surface'] || '#737373',
+                fourthKey: palette.tokens[2]?.key || '--muted',
+                fourthVal: palette.tokens[3]?.hex || map['--accent']
+            };
+        }
+
+        // 각 테마의 특성을 살린 미니 프리뷰 카드 HTML 생성
+        function generateMiniPreviewHTML(palette) {
+            const t0 = palette.tokens[0].hex; // --bg
+            const t1 = palette.tokens[1].hex; // --fg
+            const t2 = palette.tokens[2].hex; // 3번째 토큰 (--muted, --border, --accent, --surface 등)
+            const t3 = palette.tokens[3].hex; // 4번째 토큰 (--accent, --danger, --secondary 등)
+
+            const bg = t0;
+            const fg = t1;
+            const accent = palette.tokens.find(t => t.key === '--accent')?.hex || t3;
+            const subColor = palette.tokens.find(t => ['--muted', '--border', '--surface'].includes(t.key))?.hex || t2;
+            const extraColor = palette.tokens.find(t => ['--danger', '--secondary'].includes(t.key))?.hex || accent;
+
+            const btnTextContrast = getContrastColor(accent);
+            const isBrutal = palette.id === 6;
+            const isNeon = palette.id === 7;
+            const isTerminal = palette.id === 3;
+            const isQuant = palette.id === 4;
+
+            return `
+                <div id="preview-box-${palette.id}" 
+                     class="rounded-xl p-5 transition-colors duration-200 flex flex-col justify-between h-full min-h-[210px] relative overflow-hidden"
+                     style="background-color: ${bg}; color: ${fg}; border: ${isBrutal ? `3px solid ${fg}` : `1px solid ${subColor}55`}; ${isBrutal ? `box-shadow: 5px 5px 0px ${fg};` : ''}">
+                    
+                    <!-- 상단 상태 표시줄 -->
+                    <div class="flex items-center justify-between gap-2 pb-3" style="border-bottom: 1px solid ${subColor}40;">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${accent}; ${isNeon ? `box-shadow: 0 0 10px ${accent};` : ''}"></span>
+                            <span class="text-xs font-mono font-semibold tracking-tight" style="color: ${fg};">${palette.previewTitle}</span>
+                        </div>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded" 
+                              style="background-color: ${extraColor}22; color: ${extraColor}; border: 1px solid ${extraColor}55;">
+                            LIVE
+                        </span>
+                    </div>
+
+                    <!-- 중앙 메인 지표 및 텍스트 상자 -->
+                    <div class="my-4 space-y-2.5">
+                        <div class="flex items-baseline justify-between">
+                            <div class="text-2xl font-bold tracking-tight ${isTerminal ? 'font-mono' : ''}" 
+                                 style="color: ${fg}; ${isNeon ? `text-shadow: 0 0 12px ${accent}66;` : ''}">
+                                ${palette.previewMetric}
+                            </div>
+                            ${isQuant ? `
+                                <div class="flex items-center gap-1 text-[11px] font-mono">
+                                    <span class="px-1.5 py-0.5 rounded" style="background:${accent}25; color:${accent};">BUY</span>
+                                    <span class="px-1.5 py-0.5 rounded" style="background:${extraColor}25; color:${extraColor};">SELL</span>
+                                </div>
+                            ` : `
+                                <span class="text-xs font-mono" style="color: ${accent};">▲ +2.4%</span>
+                            `}
+                        </div>
+
+                        <p class="text-xs leading-relaxed opacity-80" style="color: ${subColor === accent ? fg : subColor};">
+                            ${palette.previewSub}
+                        </p>
+
+                        <!-- 미니 입력창(텍스트 상자) 프리뷰 -->
+                        <div class="flex items-center gap-2 pt-1">
+                            <input type="text" 
+                                   readonly 
+                                   value="${palette.tokens.map(tok => tok.key).join(' • ')}"
+                                   class="w-full text-xs font-mono px-2.5 py-1.5 rounded focus:outline-none cursor-default"
+                                   style="background-color: ${fg}0d; color: ${fg}; border: ${isBrutal ? `2px solid ${fg}` : `1px solid ${subColor}66`};" />
+                        </div>
+                    </div>
+
+                    <!-- 하단 액션 버튼 & 보조 배지 -->
+                    <div class="flex items-center justify-between gap-2 pt-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm inline-block" style="background-color: ${t2}; border: 1px solid ${fg}33;"></span>
+                            <span class="w-3 h-3 rounded-sm inline-block" style="background-color: ${t3}; border: 1px solid ${fg}33;"></span>
+                            <span class="text-[11px] font-mono opacity-75" style="color: ${fg};">${palette.name}</span>
+                        </div>
+                        <button type="button"
+                                onclick="copyPaletteCSS(${palette.id})"
+                                class="px-3.5 py-1.5 rounded-md text-xs font-semibold transition-transform active:scale-95"
+                                style="background-color: ${accent}; color: ${btnTextContrast}; ${isBrutal ? `border: 2px solid ${fg}; box-shadow: 2px 2px 0px ${fg};` : ''} ${isNeon ? `box-shadow: 0 0 14px ${accent}88;` : ''}">
+                            ${palette.previewBtn}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 전체 팔레트 대시보드 렌더링
+        function renderPalettes() {
+            const container = document.getElementById('palette-container');
+            const filtered = palettes.filter(p => currentFilter === 'all' ? true : p.mode === currentFilter);
+
+            container.innerHTML = filtered.map(palette => {
+                const cssString = palette.tokens.map(t => `${t.key}: ${t.hex};`).join(' ');
+
+                return `
+                <section class="rounded-2xl bg-panel border border-borderSubtle p-5 sm:p-6 transition-all hover:border-zinc-700/80 shadow-xl shadow-black/40">
+                    <!-- 카드 상단 메타 정보 헤더 -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 mb-5 border-b border-zinc-800/80">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <span class="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                    #${String(palette.id).padStart(2, '0')}
+                                </span>
+                                <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">${palette.name}</h2>
+                                <span class="text-[11px] font-medium px-2.5 py-0.5 rounded-full ${palette.mode === 'light' ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30' : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/30'}">
+                                    ${palette.mode === 'light' ? '☀ Light Theme' : '☾ Dark Theme'}
+                                </span>
+                                <span class="text-xs text-zinc-400 font-mono hidden md:inline">• ${palette.badge}</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-zinc-400 mt-1.5">
+                                ${palette.description}
+                            </p>
+                        </div>
+
+                        <!-- 전체 CSS 변수 복사 버튼 -->
+                        <div class="flex items-center gap-2 self-start sm:self-center flex-shrink-0">
+                            <button onclick="copyPaletteCSS(${palette.id})" 
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono bg-zinc-800/90 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition-all active:scale-95">
+                                <i data-lucide="code-2" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                <span>Copy CSS Vars</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 본문: 좌측 4개 컬러 스와치 카드 + 우측 미니 UI 프리뷰 카드 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                        
+                        <!-- 컬러 스와치 그리드 (4열) -->
+                        <div class="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                            ${palette.tokens.map((token, idx) => {
+                    const contrast = getContrastColor(token.hex);
+                    return `
+                                <div class="group flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 transition-all shadow-md">
+                                    
+                                    <!-- 크게 노출된 컬러 스와치 박스 (클릭 시 HEX Color Picker 오픈) -->
+                                    <label class="relative h-28 sm:h-32 w-full block cursor-pointer bg-checkerboard overflow-hidden" title="클릭하여 색상 변경 (${token.key})">
+                                        <div id="swatch-bg-${palette.id}-${idx}" 
+                                             class="w-full h-full transition-colors duration-150 flex flex-col justify-between p-2.5"
+                                             style="background-color: ${token.hex};">
+                                            
+                                            <div class="flex items-center justify-between">
+                                                <span id="swatch-tag-${palette.id}-${idx}"
+                                                      class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded backdrop-blur-sm bg-black/20"
+                                                      style="color: ${contrast};">
+                                                    ${token.key}
+                                                </span>
+                                                <span id="swatch-icon-${palette.id}-${idx}"
+                                                      class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md bg-black/25 backdrop-blur-sm"
+                                                      style="color: ${contrast};">
+                                                    <i data-lucide="pipette" class="w-3.5 h-3.5"></i>
+                                                </span>
+                                            </div>
+
+                                            <div id="swatch-hint-${palette.id}-${idx}" 
+                                                 class="text-[10px] font-medium opacity-0 group-hover:opacity-90 transition-opacity tracking-tight"
+                                                 style="color: ${contrast};">
+                                                Click to pick color
+                                            </div>
+                                        </div>
+
+                                        <!-- 네이티브 HTML5 Color Picker -->
+                                        <input type="color" 
+                                               value="${token.hex}" 
+                                               oninput="handleColorChange(${palette.id}, ${idx}, this.value)"
+                                               class="swatch-color-input" />
+                                    </label>
+
+                                    <!-- 하단 메타 및 HEX 코드 텍스트 (클릭 시 즉시 클립보드 복사) -->
+                                    <div class="p-3 flex flex-col justify-between flex-1 bg-zinc-950/70">
+                                        <div class="text-[11px] text-zinc-400 font-medium truncate mb-1" title="${token.label}">
+                                            ${token.label}
+                                        </div>
+                                        
+                                        <button type="button"
+                                                onclick="copyToClipboard(document.getElementById('hex-text-${palette.id}-${idx}').textContent, document.getElementById('hex-text-${palette.id}-${idx}').textContent)"
+                                                class="w-full flex items-center justify-between gap-1 px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-left transition-all group/hex active:scale-95"
+                                                title="클릭하여 HEX 코드 복사">
+                                            <span id="hex-text-${palette.id}-${idx}" class="font-mono text-xs sm:text-sm font-semibold text-zinc-100 tracking-wider uppercase">
+                                                ${token.hex}
+                                            </span>
+                                            <i data-lucide="copy" class="w-3.5 h-3.5 text-zinc-500 group-hover/hex:text-indigo-400 transition-colors flex-shrink-0"></i>
+                                        </button>
+
+                                        ${token.displayValue ? `
+                                            <div onclick="copyToClipboard('${token.displayValue}', '${token.hex}')"
+                                                 class="mt-1.5 text-[10px] font-mono text-sky-400/90 hover:text-sky-300 truncate cursor-pointer"
+                                                 title="원본 RGBA 값 복사: ${token.displayValue}">
+                                                ${token.displayValue}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                `;
+                }).join('')}
+                        </div>
+
+                        <!-- 우측 미니 UI 프리뷰 카드 영역 -->
+                        <div class="lg:col-span-5 flex flex-col">
+                            <div id="preview-wrapper-${palette.id}" class="flex-1">
+                                ${generateMiniPreviewHTML(palette)}
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                `;
+            }).join('');
+
+            // Lucide 아이콘 초기화
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        // 컬러 피커 조작 시 스와치 배경, HEX 텍스트, 미니 프리뷰를 즉시 업데이트
+        function handleColorChange(paletteId, tokenIndex, newHex) {
+            const formattedHex = newHex.toLowerCase();
+            const palette = palettes.find(p => p.id === paletteId);
+            if (!palette) return;
+
+            // 상태 업데이트
+            palette.tokens[tokenIndex].hex = formattedHex;
+
+            // 스와치 박스 배경 및 대비 텍스트 컬러 즉시 업데이트
+            const swatchBg = document.getElementById(`swatch-bg-${paletteId}-${tokenIndex}`);
+            const swatchTag = document.getElementById(`swatch-tag-${paletteId}-${tokenIndex}`);
+            const swatchIcon = document.getElementById(`swatch-icon-${paletteId}-${tokenIndex}`);
+            const swatchHint = document.getElementById(`swatch-hint-${paletteId}-${tokenIndex}`);
+            const hexText = document.getElementById(`hex-text-${paletteId}-${tokenIndex}`);
+
+            const contrast = getContrastColor(formattedHex);
+
+            if (swatchBg) swatchBg.style.backgroundColor = formattedHex;
+            if (swatchTag) swatchTag.style.color = contrast;
+            if (swatchIcon) swatchIcon.style.color = contrast;
+            if (swatchHint) swatchHint.style.color = contrast;
+            if (hexText) hexText.textContent = formattedHex;
+
+            // 해당 테마의 미니 프리뷰 카드 즉시 리렌더링
+            const previewWrapper = document.getElementById(`preview-wrapper-${paletteId}`);
+            if (previewWrapper) {
+                previewWrapper.innerHTML = generateMiniPreviewHTML(palette);
+            }
+        }
+
+        // 특정 팔레트의 전체 CSS 변수 선언문 복사
+        function copyPaletteCSS(paletteId) {
+            const palette = palettes.find(p => p.id === paletteId);
+            if (!palette) return;
+            const cssVars = palette.tokens.map(t => `${t.key}: ${t.hex};`).join(' ');
+            const accentHex = palette.tokens.find(t => t.key === '--accent')?.hex || palette.tokens[0].hex;
+            copyToClipboard(cssVars, accentHex);
+        }
+
+        // 다크/라이트 테마 필터링
+        function filterPalettes(mode) {
+            currentFilter = mode;
+            const buttons = ['all', 'dark', 'light'];
+            buttons.forEach(btn => {
+                const el = document.getElementById(`filter-${btn}`);
+                if (btn === mode) {
+                    el.className = "filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-zinc-800 text-white shadow-sm";
+                } else {
+                    el.className = "filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-zinc-400 hover:text-white";
+                }
+            });
+            renderPalettes();
+        }
+
+        // 모든 팔레트 색상을 초기 프리셋으로 복원
+        function resetAllPalettes() {
+            palettes = JSON.parse(JSON.stringify(INITIAL_PALETTES));
+            renderPalettes();
+            showToast("All Presets Restored", "#10b981");
+        }
+
+        // Dark / Light Theme Toggle
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+
+            const toggleBtn = document.getElementById('themeToggleBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    showToast(isDark ? 'Dark Mode Enabled' : 'Light Mode Enabled', '#6366f1');
+                });
+            }
+        }
+
+        initTheme();
+
+        // 초기 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            renderPalettes();
+        });
+    </script>
+</body>
+
+</html>

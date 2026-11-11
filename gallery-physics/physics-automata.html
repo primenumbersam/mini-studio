@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Falling Sand Simulation (Cellular Automata)</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; overflow: hidden; background: #0a0a10;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans KR", sans-serif;
+      color: #e0e0f0;
+    }
+    #ui {
+      position: fixed; top: 12px; left: 12px; z-index: 10;
+      background: rgba(10,15,25,0.85); padding: 12px; border-radius: 8px;
+      border: 1px solid #2a3a50; backdrop-filter: blur(6px);
+      pointer-events: auto; min-width: 180px;
+    }
+    h1 { margin: 0 0 10px 0; font-size: 14px; color: #fff; }
+    .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .btn {
+      padding: 6px 10px; border-radius: 6px; border: 1px solid #3a4a60;
+      background: #1e2a3b; color: #ddd; cursor: pointer; font-size: 12px;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: #2a3a50; }
+    .btn.active { background: #3b82f6; border-color: #60a5fa; color: #fff; }
+    .stat { font-size: 11px; color: #8899aa; margin-top: 6px; font-family: monospace; }
+    .note { font-size: 10px; color: #667; margin-top: 8px; line-height: 1.4; }
+    canvas { display: block; cursor: crosshair; image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+
+<div id="ui">
+  <h1>Falling Sand Simulator</h1>
+  <div class="row">
+    <button class="btn active" data-type="1">🟡 Sand</button>
+    <button class="btn" data-type="2">💧 Water</button>
+    <button class="btn" data-type="3">⬜ Stone</button>
+  </div>
+  <div class="row">
+    <button class="btn" data-type="0">🧹 Erase</button>
+    <button class="btn" id="clearBtn">Clear All</button>
+  </div>
+  <div class="row">
+    <label style="font-size:11px; color:#aaa;">Brush: <span id="brushVal">4</span></label>
+    <input type="range" id="brushRange" min="1" max="12" value="4" style="flex:1;">
+  </div>
+  <div class="stat">FPS: <span id="fpsVal">60</span> | Particles: <span id="countVal">0</span></div>
+  <div class="note">Drag to paint. Sand falls, Water flows.</div>
+</div>
+
+<canvas id="cv"></canvas>
+
+<script>
+/**
+ * Falling Sand Game - Cellular Automata
+ *
+ * Cell Types (4 bits):
+ *   0 = EMPTY
+ *   1 = SAND
+ *   2 = WATER
+ *   3 = STONE
+ *
+ * Bit Layout per cell (Uint8):
+ *   [7..4] reserved
+ *   [3..0] type
+ *   We use bit 7 as "moved this frame" flag to prevent double-processing.
+ *
+ * Rules:
+ *   SAND:
+ *     1. Fall down if empty below
+ *     2. Else fall diagonally (random left/right) if empty
+ *     3. Displace water below (swap)
+ *   WATER:
+ *     1. Fall down if empty below
+ *     2. Else spread horizontally (random direction priority)
+ */
+
+// === Constants ===
+const EMPTY = 0;
+const SAND  = 1;
+const WATER = 2;
+const STONE = 3;
+
+const TYPE_MASK   = 0b00001111; // Lower 4 bits for type
+const MOVED_FLAG  = 0b10000000; // Bit 7 for "already moved"
+
+// Colors (RGBA as 32-bit for fast ImageData write)
+// Format: 0xAABBGGRR (little-endian for Uint32Array view of ImageData)
+const COLORS = {
+  [EMPTY]: 0xFF100808, // Dark background
+  [SAND]:  0xFF30C8E0, // Sandy yellow (reversed: AABBGGRR -> E0C830)
+  [WATER]: 0xFFC86820, // Blue water
+  [STONE]: 0xFF707070, // Gray stone
+};
+
+// Slight color variation for visual interest
+function variedColor(type) {
+  const base = COLORS[type];
+  if (type === EMPTY || type === STONE) return base;
+  
+  // Add small random variation to R/G channels
+  const vary = (Math.random() * 20 - 10) | 0;
+  let r = (base & 0xFF) + vary;
+  let g = ((base >> 8) & 0xFF) + vary;
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  return (base & 0xFFFF0000) | (g << 8) | r;
+}
+
+// === Canvas Setup ===
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d', { alpha: false, willReadFrequently: true });
+
+let W, H;       // Grid dimensions (cells)
+let SCALE = 2;  // Each cell is SCALE x SCALE screen pixels
+let grid;       // Uint8Array[W * H]
+let colorBuf;   // Uint32Array for pixel colors
+let imageData;
+
+function resize() {
+  const screenW = window.innerWidth;
+  const screenH = window.innerHeight;
+
+  // Compute grid size (aim for reasonable cell count for performance)
+  // Larger SCALE = fewer cells = faster, but blockier
+  const targetCells = 400 * 300; // ~120k cells target
+  const ratio = screenW / screenH;
+  
+  SCALE = Math.max(2, Math.round(Math.sqrt(screenW * screenH / targetCells)));
+  
+  W = Math.floor(screenW / SCALE);
+  H = Math.floor(screenH / SCALE);
+
+  cv.width = W;
+  cv.height = H;
+  cv.style.width = W * SCALE + 'px';
+  cv.style.height = H * SCALE + 'px';
+
+  // Allocate grid
+  grid = new Uint8Array(W * H);
+  colorBuf = new Uint32Array(W * H);
+  imageData = ctx.createImageData(W, H);
+  
+  // Initialize color buffer
+  colorBuf.fill(COLORS[EMPTY]);
+}
+
+// === Grid Helpers ===
+function idx(x, y) { return y * W + x; }
+
+function getType(x, y) {
+  if (x < 0 || x >= W || y < 0 || y >= H) return STONE; // Boundary = solid
+  return grid[idx(x, y)] & TYPE_MASK;
+}
+
+function setCell(x, y, type) {
+  if (x < 0 || x >= W || y < 0 || y >= H) return;
+  const i = idx(x, y);
+  grid[i] = type | MOVED_FLAG; // Mark as moved
+  colorBuf[i] = variedColor(type);
+}
+
+function isEmpty(x, y) { return getType(x, y) === EMPTY; }
+function isWater(x, y) { return getType(x, y) === WATER; }
+function canDisplace(x, y, asType) {
+  const t = getType(x, y);
+  if (t === EMPTY) return true;
+  if (asType === SAND && t === WATER) return true; // Sand sinks in water
+  return false;
+}
+
+function swap(x1, y1, x2, y2) {
+  const i1 = idx(x1, y1), i2 = idx(x2, y2);
+  const t1 = grid[i1] & TYPE_MASK;
+  const t2 = grid[i2] & TYPE_MASK;
+  
+  grid[i1] = t2 | MOVED_FLAG;
+  grid[i2] = t1 | MOVED_FLAG;
+  colorBuf[i1] = variedColor(t2);
+  colorBuf[i2] = variedColor(t1);
+}
+
+// === Simulation Update ===
+let frameCount = 0;
+
+function simulate() {
+  // Clear moved flags
+  for (let i = 0; i < grid.length; i++) {
+    grid[i] &= TYPE_MASK;
+  }
+
+  // Alternate scan direction to avoid directional bias
+  const leftToRight = (frameCount & 1) === 0;
+  
+  // Process bottom-to-top (so falling happens correctly)
+  for (let y = H - 2; y >= 0; y--) {
+    // Horizontal direction alternates
+    const xStart = leftToRight ? 0 : W - 1;
+    const xEnd   = leftToRight ? W : -1;
+    const xStep  = leftToRight ? 1 : -1;
+
+    for (let x = xStart; x !== xEnd; x += xStep) {
+      const i = idx(x, y);
+      const cell = grid[i];
+
+      // Skip if empty, stone, or already moved this frame
+      if ((cell & MOVED_FLAG) !== 0) continue;
+
+      const type = cell & TYPE_MASK;
+      if (type === EMPTY || type === STONE) continue;
+
+      if (type === SAND) {
+        updateSand(x, y);
+      } else if (type === WATER) {
+        updateWater(x, y);
+      }
+    }
+  }
+
+  frameCount++;
+}
+
+function updateSand(x, y) {
+  // 1. Try fall straight down
+  if (canDisplace(x, y + 1, SAND)) {
+    if (isEmpty(x, y + 1)) {
+      setCell(x, y + 1, SAND);
+      setCell(x, y, EMPTY);
+    } else {
+      // Swap with water
+      swap(x, y, x, y + 1);
+    }
+    return;
+  }
+
+  // 2. Try fall diagonally (randomize direction)
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  const dirs = [dir, -dir];
+
+  for (const d of dirs) {
+    const nx = x + d;
+    if (canDisplace(nx, y + 1, SAND)) {
+      if (isEmpty(nx, y + 1)) {
+        setCell(nx, y + 1, SAND);
+        setCell(x, y, EMPTY);
+      } else {
+        swap(x, y, nx, y + 1);
+      }
+      return;
+    }
+  }
+}
+
+function updateWater(x, y) {
+  // 1. Try fall straight down
+  if (isEmpty(x, y + 1)) {
+    setCell(x, y + 1, WATER);
+    setCell(x, y, EMPTY);
+    return;
+  }
+
+  // 2. Try fall diagonally
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  const dirs = [dir, -dir];
+
+  for (const d of dirs) {
+    if (isEmpty(x + d, y + 1)) {
+      setCell(x + d, y + 1, WATER);
+      setCell(x, y, EMPTY);
+      return;
+    }
+  }
+
+  // 3. Spread horizontally (random direction, multiple steps for fluidity)
+  const spreadDist = 2 + (Math.random() * 2) | 0;
+  
+  for (const d of dirs) {
+    for (let step = 1; step <= spreadDist; step++) {
+      const nx = x + d * step;
+      if (!isEmpty(nx, y)) break; // Blocked
+      
+      // Check if we can fall from this position (prefer falling over spreading)
+      if (isEmpty(nx, y + 1)) {
+        setCell(nx, y + 1, WATER);
+        setCell(x, y, EMPTY);
+        return;
+      }
+      
+      // If at max spread distance, move there
+      if (step === spreadDist || !isEmpty(x + d * (step + 1), y)) {
+        setCell(nx, y, WATER);
+        setCell(x, y, EMPTY);
+        return;
+      }
+    }
+  }
+}
+
+// === Rendering ===
+function render() {
+  // Copy color buffer to ImageData
+  const data32 = new Uint32Array(imageData.data.buffer);
+  data32.set(colorBuf);
+  
+  ctx.putImageData(imageData, 0, 0);
+}
+
+// === Input ===
+let paintType = SAND;
+let brushSize = 4;
+let isDrawing = false;
+let lastX = -1, lastY = -1;
+
+function screenToGrid(clientX, clientY) {
+  const rect = cv.getBoundingClientRect();
+  const x = Math.floor((clientX - rect.left) / SCALE);
+  const y = Math.floor((clientY - rect.top) / SCALE);
+  return { x, y };
+}
+
+function paint(gx, gy) {
+  const half = Math.floor(brushSize / 2);
+  for (let dy = -half; dy <= half; dy++) {
+    for (let dx = -half; dx <= half; dx++) {
+      const px = gx + dx;
+      const py = gy + dy;
+      if (px < 0 || px >= W || py < 0 || py >= H) continue;
+      
+      // Circle brush
+      if (dx * dx + dy * dy > half * half) continue;
+      
+      // Don't overwrite stone unless erasing
+      const existing = getType(px, py);
+      if (existing === STONE && paintType !== EMPTY) continue;
+      
+      // Random chance to skip for organic look
+      if (paintType !== EMPTY && Math.random() > 0.7) continue;
+
+      const i = idx(px, py);
+      grid[i] = paintType;
+      colorBuf[i] = variedColor(paintType);
+    }
+  }
+}
+
+function paintLine(x0, y0, x1, y1) {
+  // Bresenham line for smooth strokes
+  const dx = Math.abs(x1 - x0);
+  const dy = Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1;
+  const sy = y0 < y1 ? 1 : -1;
+  let err = dx - dy;
+
+  while (true) {
+    paint(x0, y0);
+    if (x0 === x1 && y0 === y1) break;
+    const e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x0 += sx; }
+    if (e2 < dx)  { err += dx; y0 += sy; }
+  }
+}
+
+cv.addEventListener('mousedown', (e) => {
+  isDrawing = true;
+  const p = screenToGrid(e.clientX, e.clientY);
+  paint(p.x, p.y);
+  lastX = p.x; lastY = p.y;
+});
+
+cv.addEventListener('mousemove', (e) => {
+  if (!isDrawing) return;
+  const p = screenToGrid(e.clientX, e.clientY);
+  if (lastX >= 0) {
+    paintLine(lastX, lastY, p.x, p.y);
+  } else {
+    paint(p.x, p.y);
+  }
+  lastX = p.x; lastY = p.y;
+});
+
+window.addEventListener('mouseup', () => {
+  isDrawing = false;
+  lastX = lastY = -1;
+});
+
+// Touch support
+cv.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  isDrawing = true;
+  const t = e.touches[0];
+  const p = screenToGrid(t.clientX, t.clientY);
+  paint(p.x, p.y);
+  lastX = p.x; lastY = p.y;
+}, { passive: false });
+
+cv.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (!isDrawing) return;
+  const t = e.touches[0];
+  const p = screenToGrid(t.clientX, t.clientY);
+  if (lastX >= 0) {
+    paintLine(lastX, lastY, p.x, p.y);
+  }
+  lastX = p.x; lastY = p.y;
+}, { passive: false });
+
+window.addEventListener('touchend', () => {
+  isDrawing = false;
+  lastX = lastY = -1;
+});
+
+// === UI ===
+document.querySelectorAll('.btn[data-type]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.btn[data-type]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    paintType = parseInt(btn.dataset.type);
+  });
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  grid.fill(EMPTY);
+  colorBuf.fill(COLORS[EMPTY]);
+});
+
+document.getElementById('brushRange').addEventListener('input', (e) => {
+  brushSize = parseInt(e.target.value);
+  document.getElementById('brushVal').textContent = brushSize;
+});
+
+// === Stats ===
+let lastTime = performance.now();
+let frames = 0;
+
+function updateStats() {
+  const now = performance.now();
+  frames++;
+  if (now - lastTime >= 1000) {
+    document.getElementById('fpsVal').textContent = frames;
+    frames = 0;
+    lastTime = now;
+  }
+
+  // Count particles
+  let count = 0;
+  for (let i = 0; i < grid.length; i++) {
+    const t = grid[i] & TYPE_MASK;
+    if (t !== EMPTY) count++;
+  }
+  document.getElementById('countVal').textContent = count;
+}
+
+// === Main Loop ===
+function loop() {
+  simulate();
+  render();
+  updateStats();
+  requestAnimationFrame(loop);
+}
+
+// === Init ===
+window.addEventListener('resize', resize);
+resize();
+loop();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Particle System Physics Engine (Canvas, Zero-dep)</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial;
+      background: #0b0f14;
+      color: #e7edf5;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 14px; }
+    h1 { font-size: 18px; margin: 0 0 10px 0; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; }
+    @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
+
+    canvas {
+      width: 100%;
+      height: 620px;
+      background: radial-gradient(1200px 800px at 30% 20%, #071a2a, #050b12 60%, #04070c);
+      border: 1px solid #1f2a37;
+      border-radius: 10px;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .panel {
+      border: 1px solid #1f2a37;
+      border-radius: 10px;
+      padding: 12px;
+      background: #0a1320;
+    }
+    .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+    .row + .row { margin-top: 10px; }
+    label { font-size: 13px; color: #cdd7e4; }
+    input[type="range"] { width: 100%; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #cdd7e4; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #2b3b52; background: #0f1c2b; }
+    .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    button {
+      background: #12263b; color: #e7edf5; border: 1px solid #23405f;
+      padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    }
+    button:hover { background: #16314d; }
+    .note { margin-top: 10px; line-height: 1.45; font-size: 12.5px; color: #cdd7e4; }
+    .kbd { border: 1px solid #2b3b52; padding: 1px 6px; border-radius: 6px; background: #0f1c2b; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Particle System (Gravity + Friction + Elastic Collisions + Mouse Vector Field) — Canvas Only</h1>
+
+    <div class="grid">
+      <canvas id="cv" width="1200" height="620"></canvas>
+
+      <div class="panel">
+        <div class="row">
+          <label>입자 수</label>
+          <div class="mono"><span class="badge">N = <span id="nOut">250</span></span></div>
+        </div>
+        <input id="nRange" type="range" min="50" max="1200" step="10" value="250" />
+
+        <div class="row">
+          <label>중력 g (px/s²)</label>
+          <div class="mono"><span class="badge"><span id="gOut">700</span></span></div>
+        </div>
+        <input id="gRange" type="range" min="0" max="2000" step="10" value="700" />
+
+        <div class="row">
+          <label>공기 저항(감쇠) damping (0~1)</label>
+          <div class="mono"><span class="badge"><span id="dOut">0.992</span></span></div>
+        </div>
+        <input id="dRange" type="range" min="0.94" max="0.999" step="0.001" value="0.992" />
+
+        <div class="row">
+          <label>탄성 restitution (0~1)</label>
+          <div class="mono"><span class="badge"><span id="rOut">0.92</span></span></div>
+        </div>
+        <input id="rRange" type="range" min="0.2" max="1.0" step="0.01" value="0.92" />
+
+        <div class="row">
+          <label>바닥/벽 마찰 friction (0~1)</label>
+          <div class="mono"><span class="badge"><span id="fOut">0.06</span></span></div>
+        </div>
+        <input id="fRange" type="range" min="0" max="0.25" step="0.01" value="0.06" />
+
+        <div class="row">
+          <label>마우스 힘 강도</label>
+          <div class="mono"><span class="badge"><span id="mOut">1400</span></span></div>
+        </div>
+        <input id="mRange" type="range" min="0" max="6000" step="50" value="1400" />
+
+        <div class="row">
+          <label>마우스 반경</label>
+          <div class="mono"><span class="badge"><span id="mrOut">170</span></span></div>
+        </div>
+        <input id="mrRange" type="range" min="40" max="500" step="10" value="170" />
+
+        <div class="row">
+          <label>모드: 끌어당김 / 밀어냄 (A/D)</label>
+          <div class="mono"><span class="badge" id="modeBadge">Attract</span></div>
+        </div>
+
+        <div class="row">
+          <label>벡터 필드 “회전” 성분 (swirl)</label>
+          <div class="mono"><span class="badge"><span id="swOut">0.35</span></span></div>
+        </div>
+        <input id="swRange" type="range" min="0" max="1.2" step="0.01" value="0.35" />
+
+        <div class="row">
+          <label>격자 표시 (디버그)</label>
+          <div class="mono"><input id="showGrid" type="checkbox" /></div>
+        </div>
+
+        <div class="btns">
+          <button id="resetBtn">Reset</button>
+          <button id="burstBtn">Burst</button>
+          <button id="pauseBtn">Pause</button>
+        </div>
+
+        <div class="note">
+          <div><span class="kbd">조작</span></div>
+          <ul>
+            <li><b>마우스 이동</b>: 주변 입자에 벡터 필드 힘 적용</li>
+            <li><b>클릭/드래그</b>: 힘 강화 (press factor)</li>
+            <li><b>A</b>: 끌어당김(Attract)</li>
+            <li><b>D</b>: 밀어냄(Repel)</li>
+            <li><b>R</b>: Reset</li>
+          </ul>
+          <div style="margin-top:6px;">
+            충돌은 <b>Spatial Hash Grid</b>로 근접 후보만 검사합니다. (평균 성능 개선)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/**
+ * Particle System Physics Engine (Canvas only)
+ *
+ * 구현 요소:
+ * 1) 힘(Force) 기반 적분: v += a*dt, x += v*dt (semi-implicit Euler)
+ *    - 물리 시뮬레이션에서 안정성이 오일러보다 약간 더 좋고 비용이 낮음.
+ *
+ * 2) 중력: ay += g
+ * 3) 공기 저항(감쇠): v *= damping^(dt*60) 형태로 프레임레이트 변화에 둔감하게 적용
+ * 4) 벽 충돌: 위치 보정 + 반발계수(restitution)로 속도 반전 + 접선 마찰(friction)
+ * 5) 입자-입자 충돌: 임펄스 기반(탄성/비탄성) + 겹침 해결(포지션 솔브)
+ * 6) 마우스 벡터 필드:
+ *    - radial: 커서로 향하거나(Attract) 멀어지는(Repel) 힘
+ *    - swirl: radial에 수직인 회전 성분 추가 (벡터 필드 느낌)
+ *
+ * 성능:
+ * - 충돌 후보 탐색: Spatial Hash Grid (cellSize ~ 2*maxR)
+ * - 충돌 처리: 각 셀에서 이웃 셀 포함 검사 (최대 9셀)
+ */
+
+// ===== Canvas setup =====
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+let W = cv.width, H = cv.height;
+function resizeCanvasToCSS() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = cv.getBoundingClientRect();
+  const w = Math.floor(rect.width * dpr);
+  const h = Math.floor(rect.height * dpr);
+  if (cv.width !== w || cv.height !== h) {
+    cv.width = w; cv.height = h;
+    W = w; H = h;
+  }
+}
+window.addEventListener('resize', resizeCanvasToCSS);
+resizeCanvasToCSS();
+
+// ===== UI =====
+const nRange = document.getElementById('nRange');
+const gRange = document.getElementById('gRange');
+const dRange = document.getElementById('dRange');
+const rRange = document.getElementById('rRange');
+const fRange = document.getElementById('fRange');
+const mRange = document.getElementById('mRange');
+const mrRange = document.getElementById('mrRange');
+const swRange = document.getElementById('swRange');
+const showGrid = document.getElementById('showGrid');
+
+const nOut = document.getElementById('nOut');
+const gOut = document.getElementById('gOut');
+const dOut = document.getElementById('dOut');
+const rOut = document.getElementById('rOut');
+const fOut = document.getElementById('fOut');
+const mOut = document.getElementById('mOut');
+const mrOut = document.getElementById('mrOut');
+const swOut = document.getElementById('swOut');
+const modeBadge = document.getElementById('modeBadge');
+
+const resetBtn = document.getElementById('resetBtn');
+const burstBtn = document.getElementById('burstBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+
+// ===== Simulation parameters =====
+let N = +nRange.value;
+let g = +gRange.value;                  // px/s^2
+let damping = +dRange.value;            // 0..1
+let restitution = +rRange.value;        // 0..1
+let surfaceFriction = +fRange.value;    // 0..1-ish
+let mouseStrength = +mRange.value;      // force strength scalar
+let mouseRadius = +mrRange.value;       // px
+let swirl = +swRange.value;             // swirl ratio
+let attract = true;                     // mode: attract/repel
+
+// ===== Mouse state =====
+const mouse = { x: 0, y: 0, down: false, inside: false };
+
+// ===== Particle state =====
+let particles = [];
+let running = true;
+
+// Spatial hash grid
+let cellSize = 28; // will be updated based on max radius
+let grid = new Map();
+
+// ===== Helpers =====
+function rand(a, b){ return a + Math.random() * (b - a); }
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function hypot(x, y){ return Math.sqrt(x*x + y*y); }
+
+function setOutputs() {
+  nOut.textContent = String(N);
+  gOut.textContent = String(g);
+  dOut.textContent = damping.toFixed(3);
+  rOut.textContent = restitution.toFixed(2);
+  fOut.textContent = surfaceFriction.toFixed(2);
+  mOut.textContent = String(mouseStrength);
+  mrOut.textContent = String(mouseRadius);
+  swOut.textContent = swirl.toFixed(2);
+  modeBadge.textContent = attract ? 'Attract' : 'Repel';
+  modeBadge.style.borderColor = attract ? '#34d39955' : '#fb718555';
+}
+
+function rebuildCellSize() {
+  // cell size should be around 2*maxR so collisions mostly occur within neighbor cells.
+  let maxR = 10;
+  for (const p of particles) maxR = Math.max(maxR, p.r);
+  cellSize = Math.max(18, Math.min(80, Math.floor(2.2 * maxR)));
+}
+
+// Spatial hashing key
+function cellKey(ix, iy){ return (ix << 16) ^ (iy & 0xffff); }
+
+// Put particle into grid
+function gridBuild() {
+  grid.clear();
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    const ix = Math.floor(p.x / cellSize);
+    const iy = Math.floor(p.y / cellSize);
+    const key = cellKey(ix, iy);
+    let arr = grid.get(key);
+    if (!arr) { arr = []; grid.set(key, arr); }
+    arr.push(i);
+  }
+}
+
+function spawnParticles(count) {
+  // Spawn with random positions and velocities; radii vary to produce interesting collisions.
+  const margin = 30;
+  for (let i = 0; i < count; i++) {
+    const r = rand(3.5, 8.5);
+    const x = rand(margin, W - margin);
+    const y = rand(margin, H * 0.5);
+    const vx = rand(-120, 120);
+    const vy = rand(-30, 60);
+
+    // mass proportional to area (r^2) for nicer collision behavior
+    const m = r * r;
+
+    particles.push({
+      x, y, vx, vy,
+      r,
+      m,
+      // visual: small color variance
+      hue: rand(190, 330)
+    });
+  }
+  rebuildCellSize();
+}
+
+function resetAll() {
+  particles = [];
+  spawnParticles(N);
+}
+
+// Apply mouse vector field force
+function applyMouseForce(p, dt) {
+  if (!mouse.inside) return;
+
+  const dx = mouse.x - p.x;
+  const dy = mouse.y - p.y;
+  const dist = Math.sqrt(dx*dx + dy*dy) + 1e-9;
+
+  if (dist > mouseRadius) return;
+
+  // Smooth falloff (strong near center, 0 at radius)
+  const t = 1 - (dist / mouseRadius);
+  const falloff = t * t; // quadratic
+
+  // Direction: attract => toward mouse, repel => away
+  const dir = attract ? 1 : -1;
+  const nx = (dx / dist) * dir;
+  const ny = (dy / dist) * dir;
+
+  // Swirl direction: perpendicular to radial (rotate by 90deg)
+  // (nx, ny) -> (-ny, nx)
+  const sx = -ny;
+  const sy = nx;
+
+  // Press increases effect
+  const press = mouse.down ? 2.2 : 1.0;
+
+  // Force magnitude (acceleration-like), scaled by falloff and press
+  // We treat as acceleration for simplicity: dv = a*dt.
+  const a = mouseStrength * falloff * press;
+
+  // Combine radial + swirl (swirl is ratio)
+  const ax = a * (nx + swirl * sx);
+  const ay = a * (ny + swirl * sy);
+
+  p.vx += ax * dt;
+  p.vy += ay * dt;
+}
+
+// Wall collisions
+function solveWall(p) {
+  // Left
+  if (p.x - p.r < 0) {
+    p.x = p.r;
+    p.vx = Math.abs(p.vx) * restitution;
+    // tangential friction on collision surface (vertical wall => tangent is y)
+    p.vy *= (1 - surfaceFriction);
+  }
+  // Right
+  if (p.x + p.r > W) {
+    p.x = W - p.r;
+    p.vx = -Math.abs(p.vx) * restitution;
+    p.vy *= (1 - surfaceFriction);
+  }
+  // Top
+  if (p.y - p.r < 0) {
+    p.y = p.r;
+    p.vy = Math.abs(p.vy) * restitution;
+    p.vx *= (1 - surfaceFriction);
+  }
+  // Bottom
+  if (p.y + p.r > H) {
+    p.y = H - p.r;
+    p.vy = -Math.abs(p.vy) * restitution;
+    p.vx *= (1 - surfaceFriction);
+    // small "rest" threshold to reduce endless jitter
+    if (Math.abs(p.vy) < 12) p.vy = 0;
+  }
+}
+
+// Particle-particle collision (impulse + positional correction)
+function resolvePair(i, j) {
+  const a = particles[i];
+  const b = particles[j];
+
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const dist2 = dx*dx + dy*dy;
+  const minDist = a.r + b.r;
+
+  if (dist2 >= minDist * minDist) return;
+
+  const dist = Math.sqrt(dist2) + 1e-9;
+  const nx = dx / dist;
+  const ny = dy / dist;
+
+  // Positional correction to resolve overlap (split by inverse mass)
+  const overlap = (minDist - dist);
+  const invMa = 1 / a.m;
+  const invMb = 1 / b.m;
+  const invSum = invMa + invMb;
+
+  const corr = overlap / invSum;
+  a.x -= nx * corr * invMa;
+  a.y -= ny * corr * invMa;
+  b.x += nx * corr * invMb;
+  b.y += ny * corr * invMb;
+
+  // Relative velocity along normal
+  const rvx = b.vx - a.vx;
+  const rvy = b.vy - a.vy;
+  const velAlongNormal = rvx * nx + rvy * ny;
+
+  // If already separating, still keep correction but skip impulse
+  if (velAlongNormal > 0) return;
+
+  // Impulse scalar
+  const e = restitution; // coefficient of restitution
+  const jImpulse = -(1 + e) * velAlongNormal / invSum;
+
+  const impX = jImpulse * nx;
+  const impY = jImpulse * ny;
+
+  a.vx -= impX * invMa;
+  a.vy -= impY * invMa;
+  b.vx += impX * invMb;
+  b.vy += impY * invMb;
+
+  // Tangential friction between particles (very small)
+  // Compute tangent vector
+  const tx = -ny;
+  const ty = nx;
+
+  const vt = rvx * tx + rvy * ty; // relative velocity along tangent
+  const mu = surfaceFriction * 0.6; // reuse friction slider as a small mu
+  const jt = -vt / invSum;
+
+  // Coulomb friction clamp
+  const jtClamped = clamp(jt, -jImpulse * mu, jImpulse * mu);
+
+  a.vx -= jtClamped * tx * invMa;
+  a.vy -= jtClamped * ty * invMa;
+  b.vx += jtClamped * tx * invMb;
+  b.vy += jtClamped * ty * invMb;
+}
+
+// Collision broadphase using spatial grid
+function solveCollisions() {
+  gridBuild();
+
+  // For each occupied cell, check collisions within cell and neighbor cells (9 cells)
+  // To avoid double-counting, only check neighbor cells with >= ordering by cell coords.
+  for (const [key, arr] of grid.entries()) {
+    // Decode ix, iy from key is non-trivial due to XOR packing;
+    // Instead compute neighbors by re-deriving cell for each particle.
+    // We'll do a local per-particle neighbor check with a "visited pair" rule by index ordering.
+    // This keeps code simpler, still efficient due to limited local candidates.
+    for (let idxA = 0; idxA < arr.length; idxA++) {
+      const i = arr[idxA];
+      const p = particles[i];
+      const ix = Math.floor(p.x / cellSize);
+      const iy = Math.floor(p.y / cellSize);
+
+      for (let oy = -1; oy <= 1; oy++) {
+        for (let ox = -1; ox <= 1; ox++) {
+          const nKey = cellKey(ix + ox, iy + oy);
+          const bucket = grid.get(nKey);
+          if (!bucket) continue;
+
+          for (let idxB = 0; idxB < bucket.length; idxB++) {
+            const j = bucket[idxB];
+            if (j <= i) continue; // enforce i<j to avoid duplicates
+            resolvePair(i, j);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Render
+function draw() {
+  // Clear with slight alpha for trails (optional)
+  ctx.fillStyle = 'rgba(4,7,12,0.28)';
+  ctx.fillRect(0, 0, W, H);
+
+  if (showGrid.checked) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(148,163,184,0.10)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += cellSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += cellSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Mouse field visualization (subtle)
+  if (mouse.inside && mouseStrength > 0) {
+    ctx.save();
+    ctx.strokeStyle = attract ? 'rgba(52,211,153,0.20)' : 'rgba(251,113,133,0.20)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(mouse.x, mouse.y, mouseRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(226,232,240,0.7)';
+    ctx.beginPath();
+    ctx.arc(mouse.x, mouse.y, mouse.down ? 4 : 3, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Draw particles
+  for (const p of particles) {
+    // color by speed (nice feedback)
+    const sp = Math.min(400, Math.sqrt(p.vx*p.vx + p.vy*p.vy));
+    const light = 45 + (sp / 400) * 25;
+    ctx.fillStyle = `hsl(${p.hue} 90% ${light}%)`;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+// ===== Main loop =====
+let lastTs = performance.now();
+function tick(ts) {
+  const rawDt = (ts - lastTs) / 1000;
+  lastTs = ts;
+
+  resizeCanvasToCSS();
+
+  // dt clamp for stability (avoid huge step if tab was inactive)
+  const dt = clamp(rawDt, 0, 0.033);
+
+  if (running) {
+    // frame-rate independent damping approximation:
+    // if damping is per-frame(60fps) factor, then per-dt factor = damping^(dt*60)
+    const dampFactor = Math.pow(damping, dt * 60);
+
+    // integrate forces
+    for (const p of particles) {
+      // gravity
+      p.vy += g * dt;
+
+      // mouse field
+      applyMouseForce(p, dt);
+
+      // damping
+      p.vx *= dampFactor;
+      p.vy *= dampFactor;
+
+      // integrate position (semi-implicit Euler)
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      // walls
+      solveWall(p);
+    }
+
+    // collisions (a few solver iterations help stability)
+    // 1~2회면 가볍고 충분히 그럴듯함, 더 늘리면 안정성↑ 비용↑
+    solveCollisions();
+  }
+
+  draw();
+  requestAnimationFrame(tick);
+}
+
+// ===== Events =====
+function syncParams() {
+  N = +nRange.value;
+  g = +gRange.value;
+  damping = +dRange.value;
+  restitution = +rRange.value;
+  surfaceFriction = +fRange.value;
+  mouseStrength = +mRange.value;
+  mouseRadius = +mrRange.value;
+  swirl = +swRange.value;
+  setOutputs();
+}
+
+nRange.addEventListener('input', () => {
+  N = +nRange.value;
+  nOut.textContent = String(N);
+
+  // Adjust particle count without full reset
+  if (particles.length < N) spawnParticles(N - particles.length);
+  else particles.length = N;
+
+  rebuildCellSize();
+});
+
+[gRange, dRange, rRange, fRange, mRange, mrRange, swRange].forEach(el => {
+  el.addEventListener('input', syncParams);
+});
+
+resetBtn.addEventListener('click', () => resetAll());
+
+burstBtn.addEventListener('click', () => {
+  // Add an impulse burst around center
+  const cx = W * 0.5, cy = H * 0.5;
+  for (const p of particles) {
+    const dx = p.x - cx, dy = p.y - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy) + 1e-9;
+    const nx = dx / dist, ny = dy / dist;
+    const kick = 520 * (1 / (1 + dist / 120));
+    p.vx += nx * kick;
+    p.vy += ny * kick;
+  }
+});
+
+pauseBtn.addEventListener('click', () => {
+  running = !running;
+  pauseBtn.textContent = running ? 'Pause' : 'Resume';
+});
+
+// Mouse
+cv.addEventListener('mousemove', (e) => {
+  const rect = cv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  mouse.x = (e.clientX - rect.left) * dpr;
+  mouse.y = (e.clientY - rect.top) * dpr;
+  mouse.inside = true;
+});
+cv.addEventListener('mouseleave', () => mouse.inside = false);
+cv.addEventListener('mousedown', () => mouse.down = true);
+window.addEventListener('mouseup', () => mouse.down = false);
+
+// Touch
+cv.addEventListener('touchstart', (e) => {
+  mouse.down = true;
+  mouse.inside = true;
+  const rect = cv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  if (e.touches.length > 0) {
+    mouse.x = (e.touches[0].clientX - rect.left) * dpr;
+    mouse.y = (e.touches[0].clientY - rect.top) * dpr;
+  }
+}, { passive: true });
+
+cv.addEventListener('touchmove', (e) => {
+  const rect = cv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  if (e.touches.length > 0) {
+    mouse.x = (e.touches[0].clientX - rect.left) * dpr;
+    mouse.y = (e.touches[0].clientY - rect.top) * dpr;
+  }
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+  mouse.down = false;
+  mouse.inside = false;
+}, { passive: true });
+
+// Keyboard
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'a' || e.key === 'A') { attract = true; setOutputs(); }
+  if (e.key === 'd' || e.key === 'D') { attract = false; setOutputs(); }
+  if (e.key === 'r' || e.key === 'R') { resetAll(); }
+});
+
+// ===== Init =====
+setOutputs();
+resetAll();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

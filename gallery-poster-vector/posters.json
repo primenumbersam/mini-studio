@@ -1,0 +1,72 @@
+[
+  {
+    "id": "heart_low_poly_origami_v1",
+    "shape": "Heart",
+    "style_art": "Low Poly Origami",
+    "version": 1,
+    "file_path": "assets/heart_low_poly_origami_v1.svg",
+    "title": "TECTONIC PULSE",
+    "artist": "gitsam",
+    "created_at": "2026-10-22"
+  },
+  {
+    "id": "heart_ink_wash_v1",
+    "shape": "Heart",
+    "style_art": "Sumi Ink Wash",
+    "version": 1,
+    "file_path": "assets/heart_ink_wash_v1.svg",
+    "title": "RESONANCE",
+    "artist": "gitsam",
+    "created_at": "2026-10-22"
+  },
+  {
+    "id": "heart_bauhaus_constructivism_v1",
+    "shape": "Heart",
+    "style_art": "Bauhaus Constructivism",
+    "version": 1,
+    "file_path": "assets/heart_bauhaus_constructivism_v1.svg",
+    "title": "BAUHAUS SYNTHESIS",
+    "artist": "gitsam",
+    "created_at": "2026-10-22"
+  },
+  {
+    "id": "heart_swiss_style_v1",
+    "shape": "Heart",
+    "style_art": "Swiss Style",
+    "version": 1,
+    "file_path": "assets/heart_swiss_style_v1.svg",
+    "title": "ORDNUNG",
+    "artist": "gitsam",
+    "created_at": "2026-10-22"
+  },
+  {
+    "id": "heart_technical_schematic_v1",
+    "shape": "Heart",
+    "style_art": "Technical Schematic",
+    "version": 1,
+    "file_path": "assets/heart_technical_schematic_v1.svg",
+    "title": "TECHNICAL SCHEMATIC",
+    "artist": "gitsam",
+    "created_at": "2026-10-22"
+  },
+  {
+    "id": "heart_memphis_pattern_v1",
+    "shape": "Heart",
+    "style_art": "Memphis Pattern",
+    "version": 1,
+    "file_path": "assets/heart_memphis_pattern_v1.svg",
+    "title": "POP PULSE",
+    "artist": "gitsam",
+    "created_at": "2026-10-22"
+  },
+  {
+    "id": "heart_gradient_mesh_v1",
+    "shape": "Heart",
+    "style_art": "Gradient Mesh",
+    "version": 1,
+    "file_path": "assets/heart_gradient_mesh_v1.svg",
+    "title": "LUMINESCENCE",
+    "artist": "gitsam",
+    "created_at": "2026-10-22"
+  }
+]

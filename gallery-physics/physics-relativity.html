@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- UnoCSS Runtime CDN & Reset -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #000;
+            overflow: hidden;
+            touch-action: none; 
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent; 
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #22d3ee;
+            cursor: pointer;
+            margin-top: -6px; 
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #374151;
+            border-radius: 2px;
+        }
+
+        .backdrop-blur-md {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .chart-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="text-white h-screen w-screen relative">
+
+    <!-- Chosen Palette: Deep Space Black (#000) background with Cyan (#22d3ee) accents. AI Chat interface uses Indigo/Slate tones for distinction. -->
+
+    <!-- Application Structure Plan: 
+         1. Full-screen Physics Engine: Interactive spacetime grid.
+         2. Control Interface: Real-time physics parameters.
+         3. ✨Gemini AI Integration: A floating chat window that allows users to ask questions about relativity and get explanations based on the current simulation state.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Core Viz: Custom 3D Projection Canvas.
+         - AI Feature: "Ask AI about Spacetime" - Integrated LLM chat to explain complex physics concepts.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="chart-container" id="canvas-container">
+        <canvas id="simCanvas"></canvas>
+    </div>
+
+    <!-- UI Overlay Layer -->
+    <div class="absolute top-0 left-0 w-full h-full pointer-events-none flex flex-col items-center z-10 p-4">
+        
+        <!-- Header & Controls -->
+        <div class="pointer-events-auto w-full max-w-md transition-all duration-300 mb-4" id="control-panel-wrapper">
+            <button id="toggle-btn" class="w-full bg-gray-900/80 backdrop-blur-md border border-gray-700 text-cyan-400 font-bold py-3 px-4 rounded-xl flex justify-between items-center shadow-lg transition-colors">
+                <span class="flex items-center gap-2">
+                    <span class="text-lg">⚙️ 시뮬레이션 설정</span>
+                </span>
+                <span id="chevron" class="transform transition-transform duration-300">▼</span>
+            </button>
+
+            <div id="controls" class="hidden bg-gray-900/90 backdrop-blur-md border border-t-0 border-gray-700 rounded-b-xl p-5 shadow-2xl">
+                <div class="mb-5">
+                    <div class="flex justify-between text-sm text-cyan-300 mb-2 font-medium">
+                        <span>태양 질량 (Mass)</span>
+                        <span id="massVal">30</span>
+                    </div>
+                    <input type="range" id="massSlider" min="10" max="200" value="30" step="1" class="w-full">
+                </div>
+                <div class="mb-2">
+                    <div class="flex justify-between text-sm text-cyan-300 mb-2 font-medium">
+                        <span>공전 속도 (Speed)</span>
+                        <span id="speedVal">1.0</span>
+                    </div>
+                    <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1.0" class="w-full">
+                </div>
+            </div>
+        </div>
+
+        <!-- ✨ Gemini AI Chat Window -->
+        <div class="pointer-events-auto w-full max-w-md mt-auto flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl overflow-hidden mb-20 md:mb-4">
+            <div class="bg-indigo-600/50 p-3 flex justify-between items-center border-b border-slate-700">
+                <span class="font-bold flex items-center gap-2 text-sm">✨ AI 과학 도우미</span>
+                <button id="explain-btn" class="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-colors">현재 상태 설명 ✨</button>
+            </div>
+            
+            <div id="chat-box" class="h-40 overflow-y-auto p-4 space-y-3 text-sm chat-scroll flex flex-col">
+                <div class="bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] text-slate-300">
+                    안녕하세요! 일반상대성 이론이나 시공간에 대해 궁금한 점이 있으신가요?
+                </div>
+            </div>
+
+            <div class="p-3 border-t border-slate-700 flex gap-2">
+                <input type="text" id="ai-input" placeholder="질문을 입력하세요..." class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500">
+                <button id="send-btn" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm font-bold transition-colors">전송</button>
+            </div>
+        </div>
+
+        <!-- Bottom Info -->
+        <div class="absolute bottom-4 text-center pointer-events-none w-full px-4 hidden md:block">
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest">Drag to rotate • Pinch to zoom concept</p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const canvas = document.getElementById('simCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const state = {
+                mass: 30,
+                speed: 1.0,
+                rotationY: 0.5,
+                tiltX: 1.1,
+                gridSize: 28,
+                spacing: 40,
+                cameraZ: 1000
+            };
+
+            // --- Gemini API Logic ---
+            const apiKey = ""; // Runtime provides this
+            const chatBox = document.getElementById('chat-box');
+            const aiInput = document.getElementById('ai-input');
+            const sendBtn = document.getElementById('send-btn');
+            const explainBtn = document.getElementById('explain-btn');
+
+            async function callGemini(prompt) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { 
+                        parts: [{ text: "당신은 세계 최고의 물리학자이자 교육자입니다. 사용자의 질문에 대해 쉽고 친절하게 한국어로 설명하세요. 답변은 짧고 핵심 위주로 하세요. 현재 시뮬레이션의 질량(Mass)과 속도(Speed) 수치를 언급하며 설명할 수도 있습니다." }] 
+                    }
+                };
+
+                let retries = 0;
+                while (retries < 5) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        return result.candidates?.[0]?.content?.parts?.[0]?.text || "답변을 가져오지 못했습니다.";
+                    } catch (error) {
+                        retries++;
+                        await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000));
+                    }
+                }
+                return "네트워크 오류가 발생했습니다. 나중에 다시 시도해주세요.";
+            }
+
+            function addMessage(text, isAi = true) {
+                const msg = document.createElement('div');
+                msg.className = isAi ? "bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] text-slate-300" : "bg-indigo-600/80 p-2 rounded-lg self-end max-w-[85%] text-white";
+                msg.innerText = text;
+                chatBox.appendChild(msg);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            sendBtn.onclick = async () => {
+                const text = aiInput.value.trim();
+                if (!text) return;
+                aiInput.value = "";
+                addMessage(text, false);
+                const response = await callGemini(text);
+                addMessage(response, true);
+            };
+
+            aiInput.onkeypress = (e) => { if (e.key === 'Enter') sendBtn.onclick(); };
+
+            explainBtn.onclick = async () => {
+                addMessage("현재 시뮬레이션 상태를 분석 중입니다...", true);
+                const prompt = `현재 태양의 질량은 ${state.mass}이고 지구의 공전 속도는 ${state.speed}입니다. 이 상태가 시공간의 곡률과 중력에 어떤 의미를 갖는지 물리학적으로 짧게 설명해주세요.`;
+                const response = await callGemini(prompt);
+                chatBox.lastChild.innerText = response;
+            };
+
+            // --- Physics & Visualization Logic ---
+            const toggleBtn = document.getElementById('toggle-btn');
+            const controls = document.getElementById('controls');
+            const massSlider = document.getElementById('massSlider');
+            const speedSlider = document.getElementById('speedSlider');
+            const massVal = document.getElementById('massVal');
+            const speedVal = document.getElementById('speedVal');
+
+            toggleBtn.onclick = () => {
+                const isHidden = controls.classList.contains('hidden');
+                controls.classList.toggle('hidden', !isHidden);
+                document.getElementById('chevron').style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            };
+
+            massSlider.oninput = (e) => {
+                state.mass = parseFloat(e.target.value);
+                massVal.innerText = state.mass;
+            };
+            speedSlider.oninput = (e) => {
+                state.speed = parseFloat(e.target.value);
+                speedVal.innerText = state.speed;
+            };
+
+            let width, height, cx, cy, angle = 0;
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                cx = width / 2;
+                cy = height * 0.4;
+                state.spacing = Math.max(25, Math.min(width, height) / 18);
+            }
+
+            function getDepth(x, z) {
+                const dist = Math.sqrt(x*x + z*z);
+                const force = state.mass * 25; 
+                const damping = 45; 
+                return (force / (dist / 2.5 + damping)) * 10;
+            }
+
+            function project(x, y, z) {
+                const cosY = Math.cos(state.rotationY), sinY = Math.sin(state.rotationY);
+                let nx = x * cosY - z * sinY, nz = x * sinY + z * cosY;
+                const cosX = Math.cos(state.tiltX), sinX = Math.sin(state.tiltX);
+                let ny = y * cosX - nz * sinX, fz = y * sinX + nz * cosX;
+                const p = state.cameraZ / (state.cameraZ + fz);
+                return { x: cx + nx * p, y: cy + ny * p, scale: p };
+            }
+
+            let isDragging = false, lastX, lastY;
+            const startDrag = (x, y) => { isDragging = true; lastX = x; lastY = y; };
+            const moveDrag = (x, y) => {
+                if (!isDragging) return;
+                state.rotationY += (x - lastX) * 0.005;
+                state.tiltX = Math.max(0.1, Math.min(1.5, state.tiltX + (y - lastY) * 0.005));
+                lastX = x; lastY = y;
+            };
+            canvas.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
+            window.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
+            window.addEventListener('mouseup', () => isDragging = false);
+            canvas.addEventListener('touchstart', e => { if (!e.target.closest('.pointer-events-auto')) startDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+            window.addEventListener('touchmove', e => { if (isDragging) e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+            window.addEventListener('touchend', () => isDragging = false);
+
+            function render() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, width, height);
+                angle += 0.02 * state.speed;
+                const halfSize = state.gridSize / 2;
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(34, 211, 238, 0.2)';
+
+                for (let i = -halfSize; i <= halfSize; i++) {
+                    ctx.beginPath();
+                    for (let j = -halfSize; j <= halfSize; j++) {
+                        const x = i * state.spacing, z = j * state.spacing;
+                        const p = project(x, getDepth(x, z), z);
+                        if (j === -halfSize) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+                    }
+                    ctx.stroke();
+                }
+                for (let j = -halfSize; j <= halfSize; j++) {
+                    ctx.beginPath();
+                    for (let i = -halfSize; i <= halfSize; i++) {
+                        const x = i * state.spacing, z = j * state.spacing;
+                        const p = project(x, getDepth(x, z), z);
+                        if (i === -halfSize) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+                    }
+                    ctx.stroke();
+                }
+
+                const sunPos = project(0, getDepth(0, 0), 0);
+                const sunSize = 40 * sunPos.scale;
+                if (sunPos.scale > 0) {
+                    const grad = ctx.createRadialGradient(sunPos.x, sunPos.y, 0, sunPos.x, sunPos.y, sunSize * 3);
+                    grad.addColorStop(0, '#fffad0'); grad.addColorStop(0.2, '#fbbf24'); grad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(sunPos.x, sunPos.y, sunSize * 3, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(sunPos.x, sunPos.y, sunSize * 0.8, 0, Math.PI * 2); ctx.fill();
+                }
+
+                const orbitR = state.spacing * 5.5;
+                const ex = Math.cos(angle) * orbitR, ez = Math.sin(angle) * orbitR;
+                const ep = project(ex, getDepth(ex, ez), ez);
+                ctx.beginPath(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                for(let a = 0; a <= Math.PI * 2; a += 0.1) {
+                    const tx = Math.cos(a) * orbitR, tz = Math.sin(a) * orbitR;
+                    const tp = project(tx, getDepth(tx, tz), tz);
+                    if(a === 0) ctx.moveTo(tp.x, tp.y); else ctx.lineTo(tp.x, tp.y);
+                }
+                ctx.stroke();
+
+                if (ep.scale > 0) {
+                    ctx.fillStyle = '#0ea5e9'; ctx.shadowBlur = 10 * ep.scale; ctx.shadowColor = '#0ea5e9';
+                    ctx.beginPath(); ctx.arc(ep.x, ep.y, 8 * ep.scale, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+                requestAnimationFrame(render);
+            }
+
+            window.addEventListener('resize', resize);
+            resize(); render();
+        };
+    </script>
+</body>
+</html>

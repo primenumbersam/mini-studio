@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Art Styles by gitsam — 3D Wheels</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts Preconnect & Inter / JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0a0a0a',
+                        foreground: '#fafafa',
+                        muted: '#737373',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0a0a0a;
+            color: #fafafa;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* 3D 렌더링 컨텍스트 하드웨어 가속 */
+        .preserve-3d {
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+        }
+
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+    </style>
+</head>
+
+<body class="w-full h-full bg-background text-foreground antialiased selection:bg-neutral-200 selection:text-black">
+
+    <section id="works-wheel-section" aria-label="Art Styles by gitsam"
+        class="relative w-full h-full overflow-hidden select-none bg-background text-foreground">
+
+        <!-- 3D 인터랙션 스테이지 뷰포트 -->
+        <div id="stage" tabindex="0" role="listbox" aria-label="Art Styles by gitsam"
+            class="absolute inset-0 cursor-grab touch-pan-x outline-none focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white active:cursor-grabbing">
+
+            <!-- 3D 휠 컨테이너 (Z축 오프셋 구동) -->
+            <div id="wheel" class="absolute top-1/2 left-1/2 preserve-3d">
+                <!-- JS에서 카드 DOM들을 동적 생성 -->
+            </div>
+        </div>
+
+        <!-- 1. 중앙 링 라벨 (링 상태에서 노출, 드럼 회전 시 페이드아웃) -->
+        <div id="ring-label"
+            class="pointer-events-none absolute inset-0 grid place-items-center tracking-tight font-semibold text-white transition-opacity duration-75">
+            UI Art Styles
+        </div>
+
+        <!-- 2. 정면 카드 타이틀 (드럼 상태에서 좌측에 노출) -->
+        <div id="front-title"
+            class="pointer-events-none absolute top-1/2 left-[8%] -translate-y-1/2 tracking-tight font-bold text-white opacity-0 transition-opacity duration-75">
+        </div>
+
+        <!-- 3. 우측 8대 아트 스타일 인덱스 리스트 (모바일 햄버거 아코디언 & 데스크톱 고정 목록) -->
+        <div class="absolute top-4 right-4 z-30 flex flex-col items-end">
+            <!-- 모바일 아코디언 토글 버튼 (md 이상 숨김) -->
+            <button id="menu-toggle-btn" type="button" aria-expanded="false" aria-label="Toggle Art Styles Index"
+                class="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-900/90 border border-neutral-800 text-neutral-300 text-xs font-mono backdrop-blur-md hover:bg-neutral-800 transition-all active:scale-95 shadow-lg shadow-black/40">
+                <span id="menu-current-title" class="truncate max-w-[120px] text-white font-medium">Minimalist</span>
+                <i data-lucide="menu" id="menu-icon" class="w-4 h-4 text-neutral-400"></i>
+            </button>
+
+            <!-- 인덱스 리스트 컨테이너 (모바일: 토글 드롭다운 패널 / 데스크톱: 우측 상단 고정 목록) -->
+            <div id="index-container"
+                class="hidden md:block mt-2 md:mt-0 p-3 md:p-0 rounded-xl md:rounded-none bg-neutral-900/95 md:bg-transparent border border-neutral-800 md:border-none backdrop-blur-md md:backdrop-blur-none shadow-2xl md:shadow-none min-w-[180px] max-h-[70vh] overflow-y-auto md:overflow-visible transition-all">
+                <ol id="index-list"
+                    class="text-neutral-400 text-right font-mono leading-[1.8] flex flex-col gap-1 md:gap-0">
+                    <!-- JS에서 리스트 아이템 동적 생성 -->
+                </ol>
+            </div>
+        </div>
+
+        <!-- 4. 좌측 상단 네비게이션 (style_art.html, style_color.html, style_font.html) -->
+        <div class="absolute top-4 left-4 z-30 flex items-center gap-2">
+            <span
+                class="hidden md:inline-flex text-xs font-mono uppercase tracking-widest px-2.5 py-1.5 rounded-lg bg-neutral-900/90 text-neutral-300 border border-neutral-800 backdrop-blur-md">
+                삼순동순 기술
+            </span>
+            <nav aria-label="Style Navigation"
+                class="inline-flex rounded-lg bg-neutral-900/90 p-1 border border-neutral-800 backdrop-blur-md shadow-lg shadow-black/40">
+                <a href="style_art.html"
+                    class="px-2.5 sm:px-3 py-1 rounded-md text-xs font-mono font-medium transition-all bg-neutral-200 text-neutral-950 shadow-sm flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-neutral-950"></span>
+                    <span>Arts</span>
+                </a>
+                <a href="style_color.html"
+                    class="px-2.5 sm:px-3 py-1 rounded-md text-xs font-mono font-medium transition-all text-neutral-400 hover:text-white hover:bg-neutral-800/60 flex items-center gap-1.5">
+                    <span>Colors</span>
+                </a>
+                <a href="style_font.html"
+                    class="px-2.5 sm:px-3 py-1 rounded-md text-xs font-mono font-medium transition-all text-neutral-400 hover:text-white hover:bg-neutral-800/60 flex items-center gap-1.5">
+                    <span>Fonts</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- 푸터 영역 -->
+        <footer class="absolute bottom-4 inset-x-0 z-20 text-center pointer-events-none">
+            <p class="text-xs font-mono text-neutral-500">
+                삼순동순 기술 = 느좋개발 기술좋문 좋소기업
+            </p>
+        </footer>
+    </section>
+
+    <script>
+        // 8대 아트 스타일 데이터 정의
+        const ART_STYLES = [
+            {
+                title: "Minimalist",
+                image: "assets/1_minimalist.jpg",
+                desc: "극단적 여백과 단순 조형 중심"
+            },
+            {
+                title: "Editorial",
+                image: "assets/2_editorial.jpg",
+                desc: "타이포그래피 및 Line Art 격자 양식"
+            },
+            {
+                title: "Bento Grid",
+                image: "assets/3_bentogrid.jpg",
+                desc: "모듈형 대시보드 및 카드 구획"
+            },
+            {
+                title: "Neo-Brutalism",
+                image: "assets/4_neobrutalism.jpg",
+                desc: "굵은 외곽선과 원색 대비, 거친 그림자"
+            },
+            {
+                title: "Glassmorphism",
+                image: "assets/5_glassmorphism.jpg",
+                desc: "반투명 배경 블러 및 다층 레이어 깊이감"
+            },
+            {
+                title: "Terminal & HUD",
+                image: "assets/6_terminal.jpg",
+                desc: "다크 관제 화면 및 CLI 금융 터미널"
+            },
+            {
+                title: "Voxel & Pixel",
+                image: "assets/7_voxel.jpg",
+                desc: "아이소메트릭 복셀 및 도트 3D 조형"
+            },
+            {
+                title: "Kinetic & Shader",
+                image: "assets/8_kinetic.jpg",
+                desc: "WebGL 셰이더, 파티클 및 고밀도 모션"
+            }
+        ];
+
+        // 3D 지오메트리 상수 (21st.dev 원본 튜닝 비율 보존)
+        const CARD_H = 0.38;       // front card height, of the stage
+        const CARD_MAX_W = 0.34;   // maximum width ratio
+        const CARD_RATIO = 1.45;   // card width / height
+        const STEP = 40;           // degrees between cards on the drum
+        const DRUM = 2.22;         // drum radius, in card heights
+        const LENS = 2.7;          // perspective distance
+        const RING_R = 1.14;       // ring radius
+        const BOW = 1.82;          // arc radius
+        const TITLE = 0.124;       // label & title font size ratio
+        const INDEX = 0.038;       // index font size ratio
+        const CULL = 1.6;          // culling threshold
+
+        // 인터랙션 상수
+        const WHEEL_UNITS = 900;
+        const DRAG_UNITS = 420;
+        const SETTLE = 140;
+        const EASE = 0.12;
+
+        const count = ART_STYLES.length;
+        const last = Math.max(count - 1, 0);
+
+        // 수학 유틸리티 함수
+        const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const rad = (deg) => (deg * Math.PI) / 180;
+
+        const bowAt = (drumDeg, bow) => -bow * (1 - Math.cos(rad(drumDeg)));
+
+        function place(ringDeg, drumDeg, ringR, drumR, bow, m) {
+            return (
+                `translateX(${m * bowAt(drumDeg, bow)}px)` +
+                ` rotateZ(${(1 - m) * ringDeg}deg) translateY(${-(1 - m) * ringR}px)` +
+                ` rotateX(${m * drumDeg}deg) translateZ(${m * drumR}px)`
+            );
+        }
+
+        // DOM 참조
+        const stageEl = document.getElementById('stage');
+        const wheelEl = document.getElementById('wheel');
+        const ringLabelEl = document.getElementById('ring-label');
+        const frontTitleEl = document.getElementById('front-title');
+        const indexListEl = document.getElementById('index-list');
+        const indexContainerEl = document.getElementById('index-container');
+        const menuToggleBtn = document.getElementById('menu-toggle-btn');
+        const menuCurrentTitle = document.getElementById('menu-current-title');
+        const menuIcon = document.getElementById('menu-icon');
+
+        let cardEls = [];
+        let indexButtonEls = [];
+        let isMobileMenuOpen = false;
+
+        // 모바일 아코디언 토글 함수
+        function toggleMobileMenu() {
+            isMobileMenuOpen = !isMobileMenuOpen;
+            if (isMobileMenuOpen) {
+                indexContainerEl.classList.remove('hidden');
+                menuToggleBtn.setAttribute('aria-expanded', 'true');
+                menuIcon.setAttribute('data-lucide', 'x');
+            } else {
+                indexContainerEl.classList.add('hidden');
+                menuToggleBtn.setAttribute('aria-expanded', 'false');
+                menuIcon.setAttribute('data-lucide', 'menu');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeMobileMenu() {
+            if (isMobileMenuOpen) {
+                isMobileMenuOpen = false;
+                indexContainerEl.classList.add('hidden');
+                menuToggleBtn.setAttribute('aria-expanded', 'false');
+                menuIcon.setAttribute('data-lucide', 'menu');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        // 상태 변수
+        let stageW = 0;
+        let stageH = 0;
+        let turn = 0;
+        let target = 0;
+        let active = 0;
+        let dragStartY = null;
+        let settleTimeout = null;
+        let reducedMotion = false;
+
+        // 미디어 쿼리 감지
+        const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+        reducedMotion = motionQuery.matches;
+        motionQuery.addEventListener("change", (e) => { reducedMotion = e.matches; });
+
+        // 스테이지 측정 및 메트릭스 계산
+        function computeMetrics() {
+            const w = stageW || window.innerWidth;
+            const h = stageH || window.innerHeight;
+            const cardW = Math.min(h * CARD_H * CARD_RATIO, w * CARD_MAX_W);
+            const cardH = cardW / CARD_RATIO;
+            const drumR = cardH * DRUM;
+            const ringR = cardH * RING_R;
+            const ringScale = count
+                ? clamp((((2 * Math.PI * ringR) / count) * 0.82) / (cardW || 1), 0.16, 1)
+                : 1;
+
+            return {
+                cardW,
+                cardH,
+                ringR,
+                ringScale,
+                drumR,
+                bow: cardH * BOW,
+                depth: cardH * LENS,
+                titleSize: cardH * TITLE,
+                indexSize: cardH * INDEX,
+            };
+        }
+
+        // DOM 생성 및 초기화
+        function initDOM() {
+            wheelEl.innerHTML = '';
+            indexListEl.innerHTML = '';
+            cardEls = [];
+            indexButtonEls = [];
+
+            ART_STYLES.forEach((item, i) => {
+                // 1. 카드 요소 생성
+                const card = document.createElement('div');
+                card.id = `works-wheel-${i}`;
+                card.className = "group absolute backface-hidden cursor-pointer";
+
+                card.innerHTML = `
+                    <div class="face-wrapper relative block w-full h-full overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-2xl shadow-black/80 transition-shadow duration-300">
+                        <img src="${item.image}" alt="${item.title}" draggable="false"
+                            class="w-full h-full object-cover pointer-events-none" />
+                        <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4">
+                            <span class="text-xs font-mono text-neutral-300">${item.desc}</span>
+                        </div>
+                    </div>
+                `;
+
+                // 카드 클릭 시 해당 카드로 회전
+                card.addEventListener('click', () => {
+                    to(i + 1);
+                });
+
+                wheelEl.appendChild(card);
+                cardEls.push(card);
+
+                // 2. 우측 인덱스 리스트 아이템 생성
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = "cursor-pointer transition-colors outline-none hover:text-white py-0.5 text-neutral-400";
+                btn.innerText = item.title;
+                btn.addEventListener('click', () => {
+                    to(i + 1);
+                    closeMobileMenu();
+                });
+
+                li.appendChild(btn);
+                indexListEl.appendChild(li);
+                indexButtonEls.push(btn);
+            });
+        }
+
+        // 타겟 위치 이동 함수
+        function to(next) {
+            target = clamp(next, 0, last + 1);
+        }
+
+        // 지오메트리 크기 갱신
+        function updateLayout() {
+            stageW = stageEl.clientWidth;
+            stageH = stageEl.clientHeight;
+            const metrics = computeMetrics();
+
+            stageEl.style.perspective = `${metrics.depth}px`;
+            ringLabelEl.style.fontSize = `${metrics.titleSize}px`;
+            frontTitleEl.style.fontSize = `${metrics.titleSize}px`;
+            indexListEl.style.fontSize = `${Math.max(12, metrics.indexSize)}px`;
+
+            cardEls.forEach(card => {
+                card.style.width = `${metrics.cardW}px`;
+                card.style.height = `${metrics.cardH}px`;
+                card.style.marginLeft = `${-metrics.cardW / 2}px`;
+                card.style.marginTop = `${-metrics.cardH / 2}px`;
+            });
+        }
+
+        // 단일 requestAnimationFrame 렌더링 루프
+        function loop() {
+            requestAnimationFrame(loop);
+
+            const gap = target - turn;
+            if (Math.abs(gap) < 0.0005) {
+                turn = target;
+            } else {
+                turn += gap * (reducedMotion ? 1 : EASE);
+            }
+
+            const t = turn;
+            const m = clamp(t, 0, 1);
+            const pos = Math.max(0, t - 1);
+
+            const metrics = computeMetrics();
+            const { ringR, ringScale, drumR, bow } = metrics;
+
+            // 드럼 컨테이너 Z축 오프셋
+            wheelEl.style.transform = `translateZ(${-m * drumR}px)`;
+
+            // 카드 위치, 각도, 투명도, 스케일 직접 갱신
+            for (let i = 0; i < count; i++) {
+                const d = i - pos;
+                const drumDeg = d * STEP;
+                const card = cardEls[i];
+                if (card) {
+                    card.style.transform = place(
+                        d * (360 / count),
+                        drumDeg,
+                        ringR,
+                        drumR,
+                        bow,
+                        m
+                    );
+                    card.style.opacity = m > 0.5 && Math.abs(d) > CULL ? "0" : "1";
+                    card.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
+
+                    const face = card.querySelector('.face-wrapper');
+                    if (face) {
+                        face.style.transform = `scale(${lerp(ringScale, 1, m)})`;
+                    }
+                }
+            }
+
+            // 라벨 및 타이틀 투명도 교차 전환
+            ringLabelEl.style.opacity = String(1 - m);
+            frontTitleEl.style.opacity = String(m);
+
+            // 활성 인덱스 갱신
+            const near = clamp(Math.round(pos), 0, last);
+            if (active !== near) {
+                active = near;
+                const currentTitle = ART_STYLES[active]?.title || '';
+                frontTitleEl.innerText = currentTitle;
+                if (menuCurrentTitle) menuCurrentTitle.innerText = currentTitle;
+
+                // 우측 인덱스 버튼 활성 스타일 갱신
+                indexButtonEls.forEach((btn, idx) => {
+                    if (idx === active) {
+                        btn.className = "cursor-pointer transition-colors outline-none text-white font-bold py-0.5";
+                    } else {
+                        btn.className = "cursor-pointer transition-colors outline-none text-neutral-500 hover:text-white py-0.5";
+                    }
+                });
+            }
+        }
+
+        // 이벤트 리스너 등록
+        function initEvents() {
+            // 모바일 햄버거 버튼 토글
+            if (menuToggleBtn) {
+                menuToggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleMobileMenu();
+                });
+            }
+
+            // 바깥 영역 클릭 시 모바일 아코디언 닫기
+            document.addEventListener('click', (e) => {
+                if (isMobileMenuOpen && indexContainerEl && !indexContainerEl.contains(e.target)) {
+                    closeMobileMenu();
+                }
+            });
+
+            // 1. 마우스 휠 이벤트
+            stageEl.addEventListener('wheel', (e) => {
+                const next = target + e.deltaY / WHEEL_UNITS;
+                if (next > 0 && next < last + 1) {
+                    e.preventDefault();
+                }
+                to(next);
+
+                window.clearTimeout(settleTimeout);
+                settleTimeout = window.setTimeout(() => {
+                    to(Math.round(target));
+                }, SETTLE);
+            }, { passive: false });
+
+            // 2. 포인터 드래그 이벤트 (터치 및 마우스)
+            stageEl.addEventListener('pointerdown', (e) => {
+                dragStartY = e.clientY;
+                stageEl.setPointerCapture(e.pointerId);
+            });
+
+            stageEl.addEventListener('pointermove', (e) => {
+                if (dragStartY === null) return;
+                to(target + (dragStartY - e.clientY) / DRAG_UNITS);
+                dragStartY = e.clientY;
+            });
+
+            const onPointerUp = () => {
+                dragStartY = null;
+                if (target > 1) {
+                    to(Math.round(target));
+                }
+            };
+
+            stageEl.addEventListener('pointerup', onPointerUp);
+            stageEl.addEventListener('pointercancel', onPointerUp);
+
+            // 3. 키보드 방향키 이벤트
+            stageEl.addEventListener('keydown', (e) => {
+                if (e.key === "ArrowDown") {
+                    to(Math.round(target) + 1);
+                    e.preventDefault();
+                } else if (e.key === "ArrowUp") {
+                    to(Math.round(target) - 1);
+                    e.preventDefault();
+                }
+            });
+
+            // 4. 리사이즈 감지
+            const ro = new ResizeObserver(() => {
+                updateLayout();
+            });
+            ro.observe(stageEl);
+            window.addEventListener('resize', updateLayout);
+        }
+
+        // 실행 진입점
+        window.addEventListener('DOMContentLoaded', () => {
+            initDOM();
+            updateLayout();
+            const initialTitle = ART_STYLES[0]?.title || '';
+            frontTitleEl.innerText = initialTitle;
+            if (menuCurrentTitle) menuCurrentTitle.innerText = initialTitle;
+            initEvents();
+            if (window.lucide) lucide.createIcons();
+            requestAnimationFrame(loop);
+        });
+    </script>
+</body>
+
+</html>

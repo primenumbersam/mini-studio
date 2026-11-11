@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Font Pairing Studio — 24 Curated Google Font Combinations</title>
+
+  <!-- Google Fonts Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Batch 1: Google Fonts Families (1-12) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Arvo:wght@700&family=Cinzel:wght@700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Fauna+One&family=Grand+Hotel&family=Inter:wght@400;600;700&family=Josefin+Sans:wght@400;600&family=Krub:wght@400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@400;700&family=Nunito:wght@400;700;800&family=Oswald:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Raleway:wght@700;800&family=Roboto:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Space+Mono:wght@700&family=Unica+One&family=Yeseva+One&display=swap"
+    rel="stylesheet">
+
+  <!-- Batch 2: Google Fonts Families (13-24) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,600;1,400&family=Average+Sans&family=Cantarell:wght@400;700&family=Fjalla+One&family=Instrument+Sans:wght@400;600;700&family=Karla:wght@400;600&family=Montserrat:wght@700;800&family=Mulish:wght@400;600&family=PT+Sans:wght@400;700&family=Philosopher:wght@700&family=Playfair+Display:ital,wght@0,700;1,400&family=Poppins:wght@400;600&family=Rethink+Sans:wght@400;700&family=Rokkitt:wght@400;600&family=Rufina:wght@700&family=Sintony:wght@700&family=Source+Sans+3:wght@600;700&family=Spectral:wght@400;600&family=Syne:wght@700;800&family=Ubuntu:wght@700&family=Young+Serif&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-sticky: rgba(255, 255, 255, 0.88);
+      --bg-code: #0f172a;
+      --border: #e2e8f0;
+      --border-hover: #94a3b8;
+      --text-main: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --primary-border: #bfdbfe;
+      --badge-bg: #f1f5f9;
+      --badge-text: #475569;
+      --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02);
+      --shadow-card-hover: 0 12px 24px -6px rgba(15, 23, 42, 0.08), 0 4px 8px -4px rgba(15, 23, 42, 0.04);
+      --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.28);
+      --heading-scale: 24px;
+      --body-scale: 15px;
+    }
+
+    [data-theme="dark"] {
+      --bg-page: #090d16;
+      --bg-card: #111827;
+      --bg-subtle: #1e293b;
+      --bg-sticky: rgba(17, 24, 39, 0.88);
+      --bg-code: #020617;
+      --border: #1f2937;
+      --border-hover: #4b5563;
+      --text-main: #f8fafc;
+      --text-body: #cbd5e1;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --primary-soft: #1e3a8a;
+      --primary-border: #2563eb;
+      --badge-bg: #1e293b;
+      --badge-text: #cbd5e1;
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-card-hover: 0 12px 24px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 64px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Top Header */
+    .hero-header {
+      padding: 32px 0 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .hero-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      max-width: 680px;
+    }
+
+    .hero-references {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .hero-references a {
+      color: var(--primary);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .hero-references a:hover {
+      color: var(--primary-hover);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Sticky Controls Bar */
+    .sticky-controls {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--bg-sticky);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+      margin-bottom: 28px;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1.5fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+
+    @media (max-width: 1024px) {
+      .controls-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .scale-controls {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .scale-controls {
+        grid-column: span 1;
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .text-input {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .text-input:focus {
+      border-color: var(--primary);
+    }
+
+    .scale-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .slider-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 125px;
+    }
+
+    .slider-box input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* Filter Bar */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .filter-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .filter-pill:hover {
+      color: var(--text-main);
+      border-color: var(--border-hover);
+    }
+
+    .filter-pill.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .count-indicator {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* 4x6 Card Grid Layout */
+    .pairings-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 1280px) {
+      .pairings-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 920px) {
+      .pairings-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 580px) {
+      .pairings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Individual Typography Card */
+    .font-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .font-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--border-hover);
+    }
+
+    .card-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-subtle);
+    }
+
+    .card-id {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-soft);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--primary-border);
+    }
+
+    .card-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--badge-text);
+    }
+
+    /* Specimen Preview Area */
+    .card-specimen {
+      padding: 22px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .specimen-heading {
+      font-size: var(--heading-scale);
+      line-height: 1.22;
+      color: var(--text-main);
+      word-break: break-word;
+      font-weight: 700;
+    }
+
+    .specimen-body {
+      font-size: var(--body-scale);
+      line-height: 1.62;
+      color: var(--text-body);
+      word-break: break-word;
+      font-weight: 400;
+    }
+
+    /* Font Description / Meta Section */
+    .card-meta {
+      padding: 14px 18px;
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .meta-pair-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .meta-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .meta-role {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .meta-font-name {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meta-category {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    /* Card Action Buttons */
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: var(--bg-subtle);
+      border-color: var(--border-hover);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #ffffff;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* Code Inspection Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.62);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-window {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 720px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-modal);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .modal-body {
+      padding: 20px 22px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .code-block-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .code-pre {
+      background: var(--bg-code);
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 12px;
+      font-family: 'Space Mono', Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      border: 1px solid #1e293b;
+      user-select: all;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      border: 1px solid #334155;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(14px);
+      pointer-events: none;
+      transition: all 0.22s ease;
+      z-index: 200;
+      box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.35);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--border);
+      margin-top: 64px;
+      padding: 32px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top Header -->
+  <div class="container">
+    <header class="hero-header">
+      <div>
+        <h1 class="hero-title">Font Pairing Studio</h1>
+        <p class="hero-subtitle">
+          Explore 24 curated English Google Font Pairing.
+        </p>
+        <div class="hero-references">
+          References:
+          <a href="https://fontpair.co/" target="_blank" rel="noopener noreferrer">FontPair</a> &middot;
+          <a href="https://fontjoy.com/" target="_blank" rel="noopener noreferrer">Fontjoy</a> &middot;
+          <a href="https://www.figma.com/ko-kr/resource-library/font-pairings/" target="_blank" rel="noopener noreferrer">Figma Font Pairings</a>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button class="btn" id="resetControlsBtn" title="Reset sample text and font sizes">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+          Reset Preview
+        </button>
+        <button class="btn" id="themeToggleBtn" title="Switch between Light and Dark mode">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <span id="themeBtnLabel">Dark Mode</span>
+        </button>
+      </div>
+    </header>
+  </div>
+
+  <!-- Sticky Interactive Control Bar -->
+  <section class="sticky-controls">
+    <div class="container">
+      <div class="controls-grid">
+        <div class="field-group">
+          <label class="field-label" for="headingInput">
+            <span>Heading Specimen Text (H2)</span>
+          </label>
+          <input type="text" id="headingInput" class="text-input" value="Design is intelligence made visible."
+            placeholder="Type custom heading text...">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="bodyInput">
+            <span>Body Paragraph Specimen Text (P)</span>
+          </label>
+          <input type="text" id="bodyInput" class="text-input"
+            value="Typography is the craft of endowing human language with a durable visual form, establishing hierarchy, rhythm, and effortless clarity across digital interfaces."
+            placeholder="Type custom body paragraph text...">
+        </div>
+
+        <div class="scale-controls">
+          <div class="slider-box">
+            <label class="field-label" for="headingSizeSlider">
+              <span>Heading</span>
+              <span id="headingSizeVal">24px</span>
+            </label>
+            <input type="range" id="headingSizeSlider" min="18" max="38" value="24">
+          </div>
+
+          <div class="slider-box">
+            <label class="field-label" for="bodySizeSlider">
+              <span>Body</span>
+              <span id="bodySizeVal">15px</span>
+            </label>
+            <input type="range" id="bodySizeSlider" min="12" max="22" value="15">
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Filter Row -->
+      <div class="filter-row">
+        <div class="filter-pills" id="filterPills">
+          <button class="filter-pill active" data-filter="all">All 24 Pairings</button>
+          <button class="filter-pill" data-filter="serif-sans">Serif Heading + Sans Body</button>
+          <button class="filter-pill" data-filter="sans-serif">Sans Heading + Serif Body</button>
+          <button class="filter-pill" data-filter="sans-sans">Sans + Sans</button>
+          <button class="filter-pill" data-filter="special">Display / Mono / Serif+Serif</button>
+        </div>
+        <div class="count-indicator" id="countIndicator">Showing 24 of 24 combinations</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main 4x6 Typography Card Grid -->
+  <main class="container">
+    <div class="pairings-grid" id="pairingsGrid"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>삼순동순기술</p>
+    </div>
+  </footer>
+
+  <!-- Code Inspection Modal -->
+  <div class="modal-backdrop" id="codeModal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Pairing #01 — Code Snippet</div>
+        <button class="btn" id="closeModalBtn">Close (Esc)</button>
+      </div>
+      <div class="modal-body">
+        <div class="code-block-wrap">
+          <div class="code-block-header">
+            <span class="code-block-title">1. HTML &lt;head&gt; Embed Snippet (Links + Style)</span>
+            <button class="btn btn-primary" id="modalCopyHtmlBtn" style="flex:0;">Copy &lt;head&gt; HTML</button>
+          </div>
+          <pre class="code-pre" id="modalHtmlCode"></pre>
+        </div>
+
+        <div class="code-block-wrap">
+          <div class="code-block-header">
+            <span class="code-block-title">2. Standalone CSS Stylesheet (@import + Rules)</span>
+            <button class="btn" id="modalCopyCssBtn">Copy CSS Only</button>
+          </div>
+          <pre class="code-pre" id="modalCssCode"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <span id="toastMsg">Copied to clipboard!</span>
+  </div>
+
+  <script>
+    /**
+     * 24 Curated Google Font Pairings Dataset
+     * Strictly mapped to Google Fonts CDN specifications and fallback stacks.
+     */
+    const FONT_PAIRINGS = [
+      {
+        id: 1,
+        heading: "Abril Fatface",
+        headingCategory: "serif",
+        headingWeight: "400",
+        headingParam: "Abril+Fatface",
+        body: "Lato",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Lato:wght@400;700",
+        tag: "Editorial",
+        group: "serif-sans"
+      },
+      {
+        id: 2,
+        heading: "Space Mono",
+        headingCategory: "monospace",
+        headingWeight: "700",
+        headingParam: "Space+Mono:wght@700",
+        body: "Plus Jakarta Sans",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Plus+Jakarta+Sans:wght@400;600;700",
+        tag: "Technical",
+        group: "special"
+      },
+      {
+        id: 3,
+        heading: "Grand Hotel",
+        headingCategory: "cursive",
+        headingWeight: "400",
+        headingParam: "Grand+Hotel",
+        body: "Lato",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Lato:wght@400;700",
+        tag: "Expressive",
+        group: "special"
+      },
+      {
+        id: 4,
+        heading: "Raleway",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Raleway:wght@700;800",
+        body: "Merriweather",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Merriweather:wght@400;700",
+        tag: "Classic",
+        group: "sans-serif"
+      },
+      {
+        id: 5,
+        heading: "Inter",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Inter:wght@600;700",
+        body: "Krub",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Krub:wght@400;600",
+        tag: "Modern UI",
+        group: "sans-sans"
+      },
+      {
+        id: 6,
+        heading: "Oswald",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Oswald:wght@600;700",
+        body: "Source Serif 4",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Source+Serif+4:opsz,wght@8..60,400;8..60,600",
+        tag: "Bold Press",
+        group: "sans-serif"
+      },
+      {
+        id: 7,
+        heading: "Nunito",
+        headingCategory: "sans-serif",
+        headingWeight: "800",
+        headingParam: "Nunito:wght@700;800",
+        body: "Lora",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Lora:ital,wght@0,400;0,600;1,400",
+        tag: "Warm & Friendly",
+        group: "sans-serif"
+      },
+      {
+        id: 8,
+        heading: "Arvo",
+        headingCategory: "serif",
+        headingWeight: "700",
+        headingParam: "Arvo:wght@700",
+        body: "Lato",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Lato:wght@400;700",
+        tag: "Geometric Slab",
+        group: "serif-sans"
+      },
+      {
+        id: 9,
+        heading: "Unica One",
+        headingCategory: "sans-serif",
+        headingWeight: "400",
+        headingParam: "Unica+One",
+        body: "Crimson Text",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Crimson+Text:ital,wght@0,400;0,600;1,400",
+        tag: "Literary",
+        group: "sans-serif"
+      },
+      {
+        id: 10,
+        heading: "Cinzel",
+        headingCategory: "serif",
+        headingWeight: "700",
+        headingParam: "Cinzel:wght@700",
+        body: "Fauna One",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Fauna+One",
+        tag: "Luxury",
+        group: "special"
+      },
+      {
+        id: 11,
+        heading: "Yeseva One",
+        headingCategory: "serif",
+        headingWeight: "400",
+        headingParam: "Yeseva+One",
+        body: "Josefin Sans",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Josefin+Sans:wght@400;600",
+        tag: "Vintage Chic",
+        group: "serif-sans"
+      },
+      {
+        id: 12,
+        heading: "Roboto",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Roboto:wght@500;700",
+        body: "Lora",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Lora:ital,wght@0,400;0,600;1,400",
+        tag: "Balanced",
+        group: "sans-serif"
+      },
+      {
+        id: 13,
+        heading: "Montserrat",
+        headingCategory: "sans-serif",
+        headingWeight: "800",
+        headingParam: "Montserrat:wght@700;800",
+        body: "Karla",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Karla:wght@400;600",
+        tag: "Clean Geometric",
+        group: "sans-sans"
+      },
+      {
+        id: 14,
+        heading: "Fjalla One",
+        headingCategory: "sans-serif",
+        headingWeight: "400",
+        headingParam: "Fjalla+One",
+        body: "Cantarell",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Cantarell:wght@400;700",
+        tag: "Impactful",
+        group: "sans-sans"
+      },
+      {
+        id: 15,
+        heading: "Source Sans 3",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Source+Sans+3:wght@600;700",
+        body: "Alegreya",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Alegreya:ital,wght@0,400;0,600;1,400",
+        tag: "Humanist",
+        group: "sans-serif"
+      },
+      {
+        id: 16,
+        heading: "Ubuntu",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Ubuntu:wght@700",
+        body: "Rokkitt",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Rokkitt:wght@400;600",
+        tag: "Contemporary",
+        group: "sans-serif"
+      },
+      {
+        id: 17,
+        heading: "Nunito",
+        headingCategory: "sans-serif",
+        headingWeight: "800",
+        headingParam: "Nunito:wght@700;800",
+        body: "PT Sans",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "PT+Sans:wght@400;700",
+        tag: "Product & App",
+        group: "sans-sans"
+      },
+      {
+        id: 18,
+        heading: "Playfair Display",
+        headingCategory: "serif",
+        headingWeight: "700",
+        headingParam: "Playfair+Display:ital,wght@0,700;1,400",
+        body: "Lato",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Lato:wght@400;700",
+        tag: "High Contrast",
+        group: "serif-sans"
+      },
+      {
+        id: 19,
+        heading: "Syne",
+        headingCategory: "sans-serif",
+        headingWeight: "800",
+        headingParam: "Syne:wght@700;800",
+        body: "Inter",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Inter:wght@400;600",
+        tag: "Avant-Garde",
+        group: "sans-sans"
+      },
+      {
+        id: 20,
+        heading: "Rufina",
+        headingCategory: "serif",
+        headingWeight: "700",
+        headingParam: "Rufina:wght@700",
+        body: "Average Sans",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Average+Sans",
+        tag: "Magazine",
+        group: "serif-sans"
+      },
+      {
+        id: 21,
+        heading: "Sintony",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Sintony:wght@700",
+        body: "Poppins",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Poppins:wght@400;600",
+        tag: "Crisp Sans",
+        group: "sans-sans"
+      },
+      {
+        id: 22,
+        heading: "Philosopher",
+        headingCategory: "serif",
+        headingWeight: "700",
+        headingParam: "Philosopher:wght@700",
+        body: "Mulish",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Mulish:wght@400;600",
+        tag: "Refined",
+        group: "serif-sans"
+      },
+      {
+        id: 23,
+        heading: "Rethink Sans",
+        headingCategory: "sans-serif",
+        headingWeight: "700",
+        headingParam: "Rethink+Sans:wght@400;700",
+        body: "Spectral",
+        bodyCategory: "serif",
+        bodyWeight: "400",
+        bodyParam: "Spectral:wght@400;600",
+        tag: "Digital Press",
+        group: "sans-serif"
+      },
+      {
+        id: 24,
+        heading: "Young Serif",
+        headingCategory: "serif",
+        headingWeight: "400",
+        headingParam: "Young+Serif",
+        body: "Instrument Sans",
+        bodyCategory: "sans-serif",
+        bodyWeight: "400",
+        bodyParam: "Instrument+Sans:wght@400;600;700",
+        tag: "Neo-Retro",
+        group: "serif-sans"
+      }
+    ];
+
+    const DEFAULT_HEADING = "Design is intelligence made visible.";
+    const DEFAULT_BODY = "Typography is the craft of endowing human language with a durable visual form, establishing hierarchy, rhythm, and effortless clarity across digital interfaces.";
+
+    let activeFilter = "all";
+    let currentModalItem = null;
+
+    // DOM Elements
+    const pairingsGrid = document.getElementById("pairingsGrid");
+    const headingInput = document.getElementById("headingInput");
+    const bodyInput = document.getElementById("bodyInput");
+    const headingSizeSlider = document.getElementById("headingSizeSlider");
+    const bodySizeSlider = document.getElementById("bodySizeSlider");
+    const headingSizeVal = document.getElementById("headingSizeVal");
+    const bodySizeVal = document.getElementById("bodySizeVal");
+    const countIndicator = document.getElementById("countIndicator");
+    const codeModal = document.getElementById("codeModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalHtmlCode = document.getElementById("modalHtmlCode");
+    const modalCssCode = document.getElementById("modalCssCode");
+
+    // --- Snippet Generators ---
+    function generateHeadSnippet(item) {
+      const googleUrl = `https://fonts.googleapis.com/css2?family=${item.headingParam}&family=${item.bodyParam}&display=swap`;
+      return `<!-- 1. Connect Google Fonts (${item.heading} + ${item.body}) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="${googleUrl}" rel="stylesheet">
+
+<!-- 2. Apply Heading and Body Font Rules -->
+<style>
+  /* Default Body Font */
+  body {
+    font-family: '${item.body}', ${item.bodyCategory};
+    font-weight: ${item.bodyWeight};
+  }
+
+  /* Header & Headings Font */
+  header, h1, h2, h3, h4 {
+    font-family: '${item.heading}', ${item.headingCategory};
+    font-weight: ${item.headingWeight};
+  }
+</style>`;
+    }
+
+    function generateCssSnippet(item) {
+      const googleUrl = `https://fonts.googleapis.com/css2?family=${item.headingParam}&family=${item.bodyParam}&display=swap`;
+      return `@import url('${googleUrl}');
+
+body {
+  font-family: '${item.body}', ${item.bodyCategory};
+  font-weight: ${item.bodyWeight};
+}
+
+header, h1, h2, h3, h4 {
+  font-family: '${item.heading}', ${item.headingCategory};
+  font-weight: ${item.headingWeight};
+}`;
+    }
+
+    // --- Clipboard Helper (iframe-safe) ---
+    function copyTextToClipboard(text, toastMessage) {
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      temp.style.position = "fixed";
+      temp.style.opacity = "0";
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      temp.remove();
+      showToast(toastMessage);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toastMsg");
+      toastMsg.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove("show"), 2400);
+    }
+
+    // --- Render 4x6 Cards ---
+    function renderCards() {
+      const hText = headingInput.value.trim() || DEFAULT_HEADING;
+      const bText = bodyInput.value.trim() || DEFAULT_BODY;
+
+      const filtered = FONT_PAIRINGS.filter(item => {
+        if (activeFilter === "all") return true;
+        return item.group === activeFilter;
+      });
+
+      countIndicator.textContent = `Showing ${filtered.length} of ${FONT_PAIRINGS.length} combinations`;
+      pairingsGrid.innerHTML = "";
+
+      filtered.forEach(item => {
+        const paddedId = String(item.id).padStart(2, "0");
+        const card = document.createElement("article");
+        card.className = "font-card";
+
+        card.innerHTML = `
+          <div>
+            <div class="card-top-bar">
+              <span class="card-id">#${paddedId}</span>
+              <span class="card-tag">${item.tag}</span>
+            </div>
+
+            <div class="card-specimen">
+              <h2
+                class="specimen-heading"
+                style="font-family: '${item.heading}', ${item.headingCategory}; font-weight: ${item.headingWeight};"
+              ></h2>
+              <p
+                class="specimen-body"
+                style="font-family: '${item.body}', ${item.bodyCategory}; font-weight: ${item.bodyWeight};"
+              ></p>
+            </div>
+          </div>
+
+          <div class="card-meta">
+            <div class="meta-pair-info">
+              <div class="meta-col">
+                <span class="meta-role">Heading (H2)</span>
+                <span class="meta-font-name" title="${item.heading}">${item.heading}</span>
+                <span class="meta-category">${item.headingCategory}</span>
+              </div>
+              <div class="meta-col">
+                <span class="meta-role">Body (P)</span>
+                <span class="meta-font-name" title="${item.body}">${item.body}</span>
+                <span class="meta-category">${item.bodyCategory}</span>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button class="btn btn-primary" data-action="copy-html" title="Copy ready-to-paste HTML <head> snippet">
+                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy &lt;head&gt;
+              </button>
+              <button class="btn" data-action="copy-css" title="Copy @import and CSS rules only">
+                CSS
+              </button>
+              <button class="btn" data-action="inspect" title="Inspect formatted HTML & CSS snippet">
+                <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+
+        // Set textContent safely
+        card.querySelector(".specimen-heading").textContent = hText;
+        card.querySelector(".specimen-body").textContent = bText;
+
+        // Bind card button actions
+        card.querySelector('[data-action="copy-html"]').addEventListener("click", () => {
+          copyTextToClipboard(
+            generateHeadSnippet(item),
+            `Copied #${paddedId} (${item.heading} + ${item.body}) <head> snippet!`
+          );
+        });
+
+        card.querySelector('[data-action="copy-css"]').addEventListener("click", () => {
+          copyTextToClipboard(
+            generateCssSnippet(item),
+            `Copied #${paddedId} (${item.heading} + ${item.body}) CSS rules!`
+          );
+        });
+
+        card.querySelector('[data-action="inspect"]').addEventListener("click", () => {
+          openInspectModal(item);
+        });
+
+        pairingsGrid.appendChild(card);
+      });
+    }
+
+    // --- Fast Live Specimen Text Update ---
+    function updateSpecimenTextOnly() {
+      const hText = headingInput.value.trim() || DEFAULT_HEADING;
+      const bText = bodyInput.value.trim() || DEFAULT_BODY;
+      document.querySelectorAll(".specimen-heading").forEach(el => {
+        el.textContent = hText;
+      });
+      document.querySelectorAll(".specimen-body").forEach(el => {
+        el.textContent = bText;
+      });
+    }
+
+    // --- Modal Logic ---
+    function openInspectModal(item) {
+      currentModalItem = item;
+      const paddedId = String(item.id).padStart(2, "0");
+      modalTitle.textContent = `#${paddedId} ${item.heading} + ${item.body}`;
+      modalHtmlCode.textContent = generateHeadSnippet(item);
+      modalCssCode.textContent = generateCssSnippet(item);
+      codeModal.classList.add("open");
+    }
+
+    document.getElementById("closeModalBtn").addEventListener("click", () => {
+      codeModal.classList.remove("open");
+    });
+
+    codeModal.addEventListener("click", (e) => {
+      if (e.target === codeModal) codeModal.classList.remove("open");
+    });
+
+    document.getElementById("modalCopyHtmlBtn").addEventListener("click", () => {
+      if (!currentModalItem) return;
+      copyTextToClipboard(
+        generateHeadSnippet(currentModalItem),
+        `Copied ${currentModalItem.heading} + ${currentModalItem.body} <head> HTML!`
+      );
+    });
+
+    document.getElementById("modalCopyCssBtn").addEventListener("click", () => {
+      if (!currentModalItem) return;
+      copyTextToClipboard(
+        generateCssSnippet(currentModalItem),
+        `Copied ${currentModalItem.heading} + ${currentModalItem.body} CSS!`
+      );
+    });
+
+    // --- Interactive Controls Events ---
+    headingInput.addEventListener("input", updateSpecimenTextOnly);
+    bodyInput.addEventListener("input", updateSpecimenTextOnly);
+
+    headingSizeSlider.addEventListener("input", (e) => {
+      const val = `${e.target.value}px`;
+      headingSizeVal.textContent = val;
+      document.documentElement.style.setProperty("--heading-scale", val);
+    });
+
+    bodySizeSlider.addEventListener("input", (e) => {
+      const val = `${e.target.value}px`;
+      bodySizeVal.textContent = val;
+      document.documentElement.style.setProperty("--body-scale", val);
+    });
+
+    document.getElementById("filterPills").addEventListener("click", (e) => {
+      const pill = e.target.closest(".filter-pill");
+      if (!pill) return;
+      activeFilter = pill.dataset.filter;
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.toggle("active", p === pill));
+      renderCards();
+    });
+
+    document.getElementById("resetControlsBtn").addEventListener("click", () => {
+      headingInput.value = DEFAULT_HEADING;
+      bodyInput.value = DEFAULT_BODY;
+      headingSizeSlider.value = 24;
+      bodySizeSlider.value = 15;
+      headingSizeVal.textContent = "24px";
+      bodySizeVal.textContent = "15px";
+      document.documentElement.style.setProperty("--heading-scale", "24px");
+      document.documentElement.style.setProperty("--body-scale", "15px");
+      activeFilter = "all";
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.toggle("active", p.dataset.filter === "all"));
+      renderCards();
+      showToast("Preview settings reset to default.");
+    });
+
+    document.getElementById("themeToggleBtn").addEventListener("click", () => {
+      const html = document.documentElement;
+      const next = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+      html.setAttribute("data-theme", next);
+      document.getElementById("themeBtnLabel").textContent = next === "light" ? "Dark Mode" : "Light Mode";
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && codeModal.classList.contains("open")) {
+        codeModal.classList.remove("open");
+      }
+    });
+
+    // Initialize
+    window.onload = renderCards;
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,7 @@
+<svg width="200" height="280" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="280" fill="#ffffff"/>
+  <path d="M0,70 Q50,0 100,70 T200,70" stroke="black" fill="none" stroke-width="2"/>
+  <path d="M0,140 Q50,70 100,140 T200,140" stroke="black" fill="none" stroke-width="2"/>
+  <path d="M0,210 Q50,140 100,210 T200,210" stroke="black" fill="none" stroke-width="2"/>
+  <path d="M0,280 Q50,210 100,280 T200,280" stroke="black" fill="none" stroke-width="2"/>
+</svg>

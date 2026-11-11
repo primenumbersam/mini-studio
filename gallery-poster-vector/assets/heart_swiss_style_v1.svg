@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" width="100%" height="100%">
+  <!-- Swiss Style Stark Neutral Background -->
+  <rect width="600" height="900" fill="#f4f4f2"/>
+
+  <!-- Rigorous Modular Grid Lines -->
+  <g stroke="#d5d5d0" stroke-width="0.75" opacity="0.85">
+    <!-- Vertical Grid Columns -->
+    <line x1="50" y1="50" x2="50" y2="850"/>
+    <line x1="175" y1="50" x2="175" y2="850"/>
+    <line x1="300" y1="50" x2="300" y2="850"/>
+    <line x1="425" y1="50" x2="425" y2="850"/>
+    <line x1="550" y1="50" x2="550" y2="850"/>
+
+    <!-- Horizontal Module Baselines -->
+    <line x1="50" y1="50" x2="550" y2="50"/>
+    <line x1="50" y1="130" x2="550" y2="130"/>
+    <line x1="50" y1="210" x2="550" y2="210"/>
+    <line x1="50" y1="620" x2="550" y2="620"/>
+    <line x1="50" y1="720" x2="550" y2="720"/>
+    <line x1="50" y1="850" x2="550" y2="850"/>
+
+    <!-- Swiss Cross Registration Marks -->
+    <path d="M 45,50 L 55,50 M 50,45 L 50,55" stroke="#1a1a1a" stroke-width="1.2"/>
+    <path d="M 545,50 L 555,50 M 550,45 L 550,55" stroke="#1a1a1a" stroke-width="1.2"/>
+    <path d="M 45,850 L 55,850 M 50,845 L 50,855" stroke="#1a1a1a" stroke-width="1.2"/>
+    <path d="M 545,850 L 555,850 M 550,845 L 550,855" stroke="#1a1a1a" stroke-width="1.2"/>
+  </g>
+
+  <!-- Top Typographic Module -->
+  <g font-family="system-ui, -apple-system, sans-serif" fill="#1a1a1a">
+    <text x="50" y="80" font-size="28" font-weight="900" letter-spacing="-1">HERZ // 03</text>
+    <text x="50" y="100" font-size="10" font-weight="600" letter-spacing="1.2" fill="#666662">INTERNATIONALE TYPOGRAFIE</text>
+    <text x="300" y="80" font-size="11" font-weight="700" letter-spacing="0.5">FIG. 01 — GEOMETRISCHE REDUKTION</text>
+    <text x="300" y="98" font-size="9" font-weight="500" fill="#666662" letter-spacing="0.8">ZÜRICH • BASEL • 1957 / 2026</text>
+  </g>
+
+  <!-- Primary Visual Anchor: Asymmetric Constructive Heart -->
+  <!-- Left Lobe: Solid Swiss Red (#e11d27) Disc -->
+  <circle cx="230" cy="380" r="110" fill="#e11d27"/>
+
+  <!-- Right Lobe: Heavy Black Ring & 45-degree Precision Arc -->
+  <circle cx="370" cy="380" r="110" fill="none" stroke="#1a1a1a" stroke-width="26"/>
+
+  <!-- Lower Heart Wedge: Sharp Angled Polygon meeting at point (300, 580) -->
+  <polygon points="120,380 480,380 300,580" fill="#1a1a1a"/>
+  <!-- Inverted Diagonal Swiss Red Accent Cut -->
+  <polygon points="210,380 300,380 300,480" fill="#e11d27"/>
+
+  <!-- Center Datum & Measurement Callouts -->
+  <g stroke="#1a1a1a" stroke-width="1">
+    <line x1="300" y1="230" x2="300" y2="610" stroke-dasharray="3,3"/>
+    <circle cx="300" cy="380" r="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="300" cy="580" r="3" fill="#e11d27"/>
+  </g>
+
+  <!-- Middle Technical Legend -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#1a1a1a">
+    <text x="50" y="642" letter-spacing="1.5">MODUL R: 110 MM</text>
+    <text x="175" y="642" letter-spacing="1.5">WINKEL: 45.00°</text>
+    <text x="300" y="642" letter-spacing="1.5">ACHSE: 300.00 PT</text>
+    <text x="425" y="642" letter-spacing="1.5">STATUS: RATIONAL</text>
+  </g>
+
+  <!-- Lower Title & Editorial Layout -->
+  <g font-family="system-ui, -apple-system, sans-serif">
+    <!-- Huge Swiss Headline -->
+    <text x="50" y="775" font-size="52" font-weight="900" letter-spacing="-2" fill="#1a1a1a">ORDNUNG</text>
+    <text x="50" y="805" font-size="13" font-weight="700" letter-spacing="2.5" fill="#e11d27">SYSTEMATISCHE FORMGESTALTUNG</text>
+
+    <!-- Meta & Artist Credit -->
+    <text x="50" y="835" font-size="9.5" font-weight="600" letter-spacing="1.5" fill="#666662">STIL: SWISS STYLE (NEUE GRAFIK)</text>
+    <text x="550" y="835" font-size="10" font-weight="800" letter-spacing="2" fill="#1a1a1a" text-anchor="end">ARTIST: GITSAM</text>
+  </g>
+</svg>

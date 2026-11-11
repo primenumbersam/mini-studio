@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" width="100%" height="100%">
+  <defs>
+    <!-- Background Radial Ambient Glow -->
+    <radialGradient id="bg-glow" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#2d1b4e" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#141126" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#090a12" stop-opacity="1"/>
+    </radialGradient>
+
+    <!-- Main Fluid Mesh Heart Primary Linear Gradient -->
+    <linearGradient id="heart-grad-base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff007a"/>
+      <stop offset="35%" stop-color="#7928ca"/>
+      <stop offset="70%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+
+    <!-- Internal Volumetric Highlights -->
+    <radialGradient id="volumetric-light-left" cx="35%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#ff71b5" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#ff2e93" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7928ca" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="volumetric-light-right" cx="70%" cy="35%" r="45%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#6366f1" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Bottom Apex Warm Underglow -->
+    <radialGradient id="apex-glow" cx="50%" cy="90%" r="40%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.75"/>
+      <stop offset="60%" stop-color="#ef4444" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Soft Depth Blur Filters -->
+    <filter id="ambient-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="35" result="blur"/>
+    </filter>
+    <filter id="gloss-blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <!-- Deep Cosmic Canvas Background -->
+  <rect width="600" height="900" fill="url(#bg-glow)"/>
+
+  <!-- Minimal Coordinate Frame & Guide Crosses -->
+  <g stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.8">
+    <line x1="50" y1="70" x2="550" y2="70"/>
+    <line x1="50" y1="740" x2="550" y2="740"/>
+    <line x1="300" y1="120" x2="300" y2="135"/>
+    <line x1="292.5" y1="127.5" x2="307.5" y2="127.5"/>
+  </g>
+
+  <!-- Top Metadata Header -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="9.5" fill="#a5b4fc" letter-spacing="2">
+    <text x="50" y="55">SPECTRAL VOLUMETRICS // 06</text>
+    <text x="550" y="55" text-anchor="end" fill="#ffffff" font-weight="700">SHAPE: HEART</text>
+  </g>
+
+  <!-- Giant Ambient Backdrop Glow Behind the Heart -->
+  <path d="M 300,285
+           C 260,165 130,165 95,270
+           C 60,375 145,475 300,615
+           C 455,475 540,375 505,270
+           C 470,165 340,165 300,285 Z"
+        fill="#ff007a"
+        opacity="0.45"
+        filter="url(#ambient-shadow)"/>
+
+  <!-- Main 3D Volumetric Heart Body -->
+  <!-- Base Gradient Silhouette -->
+  <path d="M 300,285
+           C 260,165 130,165 95,270
+           C 60,375 145,475 300,615
+           C 455,475 540,375 505,270
+           C 470,165 340,165 300,285 Z"
+        fill="url(#heart-grad-base)"/>
+
+  <!-- Left Volume Radial Shading Overlay -->
+  <path d="M 300,285
+           C 260,165 130,165 95,270
+           C 60,375 145,475 300,615
+           C 455,475 540,375 505,270
+           C 470,165 340,165 300,285 Z"
+        fill="url(#volumetric-light-left)"/>
+
+  <!-- Right Volume Radial Shading Overlay -->
+  <path d="M 300,285
+           C 260,165 130,165 95,270
+           C 60,375 145,475 300,615
+           C 455,475 540,375 505,270
+           C 470,165 340,165 300,285 Z"
+        fill="url(#volumetric-light-right)"/>
+
+  <!-- Apex Warm Radiance Underglow -->
+  <path d="M 300,285
+           C 260,165 130,165 95,270
+           C 60,375 145,475 300,615
+           C 455,475 540,375 505,270
+           C 470,165 340,165 300,285 Z"
+        fill="url(#apex-glow)"/>
+
+  <!-- Crisp Upper Glass Rim Highlight -->
+  <path d="M 125,260 C 150,195 240,195 285,260"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="3"
+        stroke-linecap="round"
+        opacity="0.8"
+        filter="url(#gloss-blur)"/>
+
+  <!-- Central Crest Fine Light Ribbon -->
+  <path d="M 300,320 C 300,420 300,520 300,580"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        opacity="0.35"/>
+
+  <!-- Lower Poster Typography Block -->
+  <g font-family="system-ui, -apple-system, sans-serif">
+    <!-- Main Headline with Smooth Tracking -->
+    <text x="50" y="802" font-size="34" font-weight="900" letter-spacing="1" fill="#ffffff">LUMINESCENCE</text>
+    <!-- Subtitle -->
+    <text x="50" y="828" font-size="11" font-weight="600" letter-spacing="2.5" fill="#a5b4fc">GRADIENT MESH &amp; SOFT SHADOW</text>
+
+    <!-- Bottom Fine Line & Metadata -->
+    <line x1="50" y1="846" x2="550" y2="846" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.8"/>
+    <text x="50" y="866" font-size="9" font-weight="500" letter-spacing="1.5" fill="#64748b">SCALE: 1:1  •  WAVELENGTH: 380-750 NM</text>
+    <text x="550" y="866" font-size="9.5" font-weight="800" letter-spacing="2" fill="#ffffff" text-anchor="end">ARTIST: GITSAM</text>
+  </g>
+</svg>
