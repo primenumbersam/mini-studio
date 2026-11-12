@@ -69,45 +69,82 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 3D Stage & Transforms */
+        /* Stage & Frame Transforms */
         .stage-viewport {
-            perspective: 1200px;
             user-select: none;
             touch-action: pan-y;
         }
 
         .picture-frame-wrap {
-            transform-style: preserve-3d;
-            transition: filter 0.3s ease;
+            transition: filter 0.35s ease;
+            filter: brightness(0.82);
         }
 
+        html:not(.dark) .picture-frame-wrap {
+            filter: brightness(0.95);
+        }
+
+        .picture-frame-wrap.active,
         .picture-frame-wrap:hover {
             z-index: 30;
+            filter: brightness(1.04);
         }
 
-        /* Spotlight Cone from Lamp */
+        /* Ambient Wall Glow behind Active Frame */
+        .wall-glow {
+            position: absolute;
+            inset: -16px -20px;
+            border-radius: 20px;
+            background: radial-gradient(ellipse at 50% 48%, rgba(255, 205, 90, 0.22) 0%, rgba(255, 180, 50, 0.06) 52%, transparent 75%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            z-index: 0;
+        }
+
+        html:not(.dark) .wall-glow {
+            background: radial-gradient(ellipse at 50% 48%, rgba(245, 180, 40, 0.20) 0%, rgba(240, 165, 20, 0.06) 52%, transparent 75%);
+        }
+
+        /* Downward Spotlight Cone from Lamp Hood */
         .spotlight-cone {
             position: absolute;
             left: 50%;
-            top: 0;
+            top: 7px;
             transform: translateX(-50%);
-            width: 220%;
-            height: 180%;
-            background: radial-gradient(ellipse at 50% 0%, rgba(255, 230, 140, 0.22) 0%, rgba(255, 215, 0, 0.08) 45%, transparent 75%);
+            width: 114%;
+            height: 82%;
+            clip-path: polygon(34% 0%, 66% 0%, 100% 100%, 0% 100%);
+            background: linear-gradient(to bottom, rgba(255, 240, 175, 0.34) 0%, rgba(255, 220, 120, 0.12) 45%, transparent 92%);
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            mix-blend-mode: screen;
-            z-index: 10;
+            transition: opacity 0.35s ease;
+            z-index: 15;
         }
 
         html:not(.dark) .spotlight-cone {
-            background: radial-gradient(ellipse at 50% 0%, rgba(255, 200, 50, 0.18) 0%, rgba(240, 180, 20, 0.05) 50%, transparent 80%);
-            mix-blend-mode: multiply;
+            background: linear-gradient(to bottom, rgba(255, 215, 90, 0.28) 0%, rgba(245, 190, 50, 0.10) 45%, transparent 92%);
         }
 
+        /* Internal Artwork Surface Illumination */
+        .artwork-light {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 90% 75% at 50% 0%, rgba(255, 245, 200, 0.26) 0%, rgba(255, 220, 130, 0.07) 55%, transparent 90%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            z-index: 10;
+        }
+
+        .picture-frame-wrap.active .wall-glow,
+        .picture-frame-wrap:hover .wall-glow,
         .picture-frame-wrap.active .spotlight-cone,
-        .picture-frame-wrap:hover .spotlight-cone {
+        .picture-frame-wrap:hover .spotlight-cone,
+        .picture-frame-wrap.active .artwork-light,
+        .picture-frame-wrap:hover .artwork-light,
+        .picture-frame-wrap.active .spotlight-bulb,
+        .picture-frame-wrap:hover .spotlight-bulb {
             opacity: 1;
         }
 
@@ -187,11 +224,11 @@
             <div class="flex items-center gap-2 sm:gap-3">
                 <div
                     class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-black font-bold shadow-md shadow-amber-500/20">
-                    <i data-lucide="frame" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black"></i>
+                    <i data-lucide="image" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black"></i>
                 </div>
                 <span
                     class="font-mono text-[11px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-muted truncate max-w-[170px] sm:max-w-none">
-                    Mini Studio · Picture Rail
+                    Mini Studio
                 </span>
             </div>
 
@@ -217,13 +254,13 @@
         <div class="max-w-4xl mx-auto px-4 text-center mb-3 sm:mb-6">
             <p
                 class="font-mono text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-amber-500 mb-1.5">
-                Curated Interactive Collection · 9 Works
+                Interactive Collection
             </p>
             <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
-                Mini Studio Gallery
+                by gitsam
             </h1>
             <p class="text-xs sm:text-sm md:text-base text-muted mt-1.5 max-w-2xl mx-auto px-2">
-                황동 레일에 걸린 9가지 인터랙티브 스튜디오. 좌우로 스와이프하거나 액자를 탭하여 감상하세요.
+                좌우로 스와이프하거나 액자를 탭하여 감상하세요.
             </p>
         </div>
 
@@ -247,7 +284,7 @@
 
             <!-- Stage Viewport (Frames Hanging) -->
             <div id="galleryStage"
-                class="stage-viewport relative w-full h-[370px] xs:h-[400px] sm:h-[460px] md:h-[520px] mt-1.5 overflow-hidden flex items-start justify-center cursor-grab active:cursor-grabbing">
+                class="stage-viewport relative w-full h-[370px] xs:h-[400px] sm:h-[460px] md:h-[520px] mt-1.5 overflow-hidden cursor-grab active:cursor-grabbing">
                 <!-- Javascript will inject hanging frames here -->
             </div>
         </div>
@@ -257,7 +294,7 @@
             <div id="activeInfoStrip"
                 class="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-card border border-border text-[11px] sm:text-xs text-muted shadow-sm transition-all max-w-[92vw] truncate">
                 <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span>
-                <span id="activeInfoText" class="font-mono truncate">액자를 탭하여 상세 정보와 바로가기를 탐색하세요</span>
+                <span id="activeInfoText" class="font-mono truncate">액자를 탭하여 상세 정보를 탐색하세요</span>
             </div>
 
             <!-- Dots Indicator for Mobile & Desktop -->
@@ -351,7 +388,7 @@
                 <div class="flex items-center gap-2.5 pt-1">
                     <a id="modalLaunchBtn" href="#"
                         class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-foreground text-background font-semibold text-xs sm:text-sm hover:opacity-90 active:scale-95 transition-all shadow-md">
-                        <span>Launch Studio (열기)</span>
+                        <span>Launch Studio</span>
                         <i data-lucide="external-link" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     </a>
                     <button id="modalFlipBtn" type="button"
@@ -371,104 +408,47 @@
          */
         const ITEMS = [
             {
-                id: "selector-style",
-                title: "Font & Color Style Picker",
-                artist: "Design Tokens Lab",
+                id: "gallery-labs",
+                title: "Research Labs",
+                artist: "gitsam",
                 year: "2026",
-                image: "assets/selector-style.jpg",
-                link: "selector-style/style_font.html",
-                aspect: 1.3,
-                frame: "oak",
-                mat: false,
-                drop: 0.01,
-                tag: "Design Tokens",
-                details: [
-                    "10 Typography Presets (EN/KR)",
-                    "10 Hex Color Palette Tokens",
-                    "Achromatic Bento Grid Layout",
-                    "One-click CSS Declaration Copy"
-                ]
-            },
-            {
-                id: "selector-font",
-                title: "Font Pairing Studio",
-                artist: "Typography Lab",
-                year: "2026",
-                image: "assets/selector-font.jpg",
-                link: "selector-font/index.html",
-                aspect: 1.35,
-                frame: "black",
-                mat: true,
-                drop: 0.10,
-                tag: "Typography",
-                details: [
-                    "24 Curated Google Font Pairings",
-                    "Interactive Heading & Body Scales",
-                    "Instant HTML & CSS Code Export",
-                    "Dynamic Light & Dark Theme"
-                ]
-            },
-            {
-                id: "selector-cartoon",
-                title: "Cartoon Art Selector",
-                artist: "Visual Studio",
-                year: "2026",
-                image: "assets/selector-cartoon.jpg",
-                link: "selector-cartoon/index.html",
-                aspect: 1,
+                image: "assets/gallery-labs.jpg",
+                link: "https://gitsam.com/labs/",
+                aspect: 1.2,
                 frame: "white",
                 mat: true,
-                drop: 0.14,
-                tag: "Illustration",
+                drop: 0.02,
+                tag: "R&D",
                 details: [
-                    "8 Visual Art & Cartoon Presets",
-                    "Consistent Character Reference",
-                    "Prompt Matrix & Color DNA",
-                    "SVG Vector & Bitmap Hybrid"
+                    "Cutting-edge Motion Systems",
+                    "Kinetic Typography Tests",
+                    "Zero-Build Component Architecture",
+                    "Edge-optimized Performance"
                 ]
             },
             {
-                id: "gallery-rubiks-cube",
-                title: "Rubik's Cube 3D",
-                artist: "WebGL Physics",
+                id: "gallery-artifacts",
+                title: "Artifacts Management",
+                artist: "gitsam",
                 year: "2026",
-                image: "assets/gallery-rubiks-cube.jpg",
-                link: "gallery-rubiks-cube/index.html",
-                aspect: 1,
-                frame: "oak",
-                mat: true,
-                drop: 0.05,
-                tag: "3D Interactive",
-                details: [
-                    "Interactive 3D WebGL Matrix",
-                    "Zero-latency Mouse Orbit Controls",
-                    "Rotational Layer Logic",
-                    "Smooth Kinetic Deceleration"
-                ]
-            },
-            {
-                id: "gallery-poster-vector",
-                title: "Vector Poster Gallery",
-                artist: "Bauhaus Studio",
-                year: "2026",
-                image: "assets/gallery-poster-vector.jpg",
-                link: "gallery-poster-vector/index.html",
-                aspect: 0.75,
+                image: "assets/gallery-artifacts.jpg",
+                link: "https://gitsam.notion.site/Notion-243d716ee0de801ba510d76792aef641",
+                aspect: 1.25,
                 frame: "black",
-                mat: false,
-                drop: -0.05,
-                tag: "Vector Graphics",
+                mat: true,
+                drop: 0.08,
+                tag: "Generative UI",
                 details: [
-                    "Swiss & Bauhaus Geometric Style",
-                    "Lossless Scalable Vector Graphics",
-                    "High-contrast Color Palettes",
-                    "Print-ready Canvas Renders"
+                    "Generative Code Prototypes",
+                    "Micro-interaction Showcase",
+                    "Procedural Visual Experiments",
+                    "Responsive Layout Experiments"
                 ]
             },
             {
                 id: "gallery-physics",
                 title: "Physics Simulation",
-                artist: "Mini Studio",
+                artist: "gitsam",
                 year: "2026",
                 image: "assets/gallery-physics.jpg",
                 link: "gallery-physics/index.html",
@@ -485,28 +465,28 @@
                 ]
             },
             {
-                id: "gallery-labs",
-                title: "Design Research Labs",
-                artist: "Future Interface",
+                id: "gallery-poster-vector",
+                title: "Vector Poster Gallery",
+                artist: "gitsam",
                 year: "2026",
-                image: "assets/gallery-labs.jpg",
-                link: "selector-style/style_color.html",
-                aspect: 1.2,
-                frame: "white",
-                mat: true,
-                drop: 0.02,
-                tag: "R&D",
+                image: "assets/gallery-poster-vector.jpg",
+                link: "gallery-poster-vector/index.html",
+                aspect: 0.75,
+                frame: "black",
+                mat: false,
+                drop: -0.05,
+                tag: "Vector Graphics",
                 details: [
-                    "Cutting-edge Motion Systems",
-                    "Kinetic Typography Tests",
-                    "Zero-Build Component Architecture",
-                    "Edge-optimized Performance"
+                    "Swiss & Bauhaus Geometric Style",
+                    "Lossless Scalable Vector Graphics",
+                    "High-contrast Color Palettes",
+                    "Print-ready Canvas Renders"
                 ]
             },
             {
                 id: "gallery-calendar-bitmap",
-                title: "Maltipoo Calendar 2027",
-                artist: "Samsoon Studio",
+                title: "2027 Calendar",
+                artist: "gitsam",
                 year: "2027",
                 image: "assets/gallery-calendar-bitmap.jpg",
                 link: "gallery-calendar-bitmap/index.html",
@@ -523,22 +503,79 @@
                 ]
             },
             {
-                id: "gallery-artifacts",
-                title: "Creative Artifacts",
-                artist: "Experimental Lab",
+                id: "selector-style",
+                title: "UI Style Selectorr",
+                artist: "gitsam",
                 year: "2026",
-                image: "assets/gallery-artifacts.jpg",
-                link: "gallery-calendar-bitmap/index.html",
-                aspect: 1.25,
+                image: "assets/selector-style.jpg",
+                link: "selector-style/style_font.html",
+                aspect: 1.3,
+                frame: "oak",
+                mat: false,
+                drop: 0.01,
+                tag: "Design Studio",
+                details: [
+                    "10 Typography Presets (EN/KR)",
+                    "10 Hex Color Palette Tokens",
+                    "Achromatic Bento Grid Layout",
+                    "One-click CSS Declaration Copy"
+                ]
+            },
+            {
+                id: "selector-cartoon",
+                title: "Cartoon Art Selector",
+                artist: "gitsam",
+                year: "2026",
+                image: "assets/selector-cartoon.jpg",
+                link: "selector-cartoon/index.html",
+                aspect: 1,
+                frame: "white",
+                mat: true,
+                drop: 0.14,
+                tag: "Illustration",
+                details: [
+                    "8 Visual Art & Cartoon Presets",
+                    "Consistent Character Reference",
+                    "Prompt Matrix & Color DNA",
+                    "SVG Vector & Bitmap Hybrid"
+                ]
+            },
+            {
+                id: "selector-font",
+                title: "Font Pairing Selector",
+                artist: "gitsam",
+                year: "2026",
+                image: "assets/selector-font.jpg",
+                link: "selector-font/index.html",
+                aspect: 1.35,
                 frame: "black",
                 mat: true,
-                drop: 0.08,
-                tag: "Generative UI",
+                drop: 0.10,
+                tag: "Typography",
                 details: [
-                    "Generative Code Prototypes",
-                    "Micro-interaction Showcase",
-                    "Procedural Visual Experiments",
-                    "Responsive Layout Experiments"
+                    "24 Curated Google Font Pairings",
+                    "Interactive Heading & Body Scales",
+                    "Instant HTML & CSS Code Export",
+                    "Dynamic Light & Dark Theme"
+                ]
+            },
+            {
+                id: "gallery-rubiks-cube",
+                title: "Rubik's Cube 3D",
+                artist: "gitsam",
+                year: "2026",
+                image: "assets/gallery-rubiks-cube.jpg",
+                link: "gallery-rubiks-cube/index.html",
+                aspect: 1,
+                frame: "oak",
+                mat: true,
+                drop: 0.05,
+                tag: "3D Interactive",
+                details: [
+                    "Interactive 3D WebGL Matrix",
+                    "Zero-latency Mouse Orbit Controls",
+                    "Rotational Layer Logic",
+                    "Smooth Kinetic Deceleration"
                 ]
             }
         ];
@@ -546,20 +583,23 @@
         // Physics & Stage Variables
         let activeIndex = 0;
         let isAutoplay = true;
+        let isStageHovered = false;
         let autoplayInterval = null;
         let isDragging = false;
         let dragStartX = 0;
+        let dragMovedPx = 0;
         let stageScrollX = 0;
         let targetScrollX = 0;
 
-        // Pendulum Physics state per frame
-        const frameStates = ITEMS.map((item, idx) => ({
-            angle: (((idx * 37 + 11) % 7) - 3) * 0.35,
+        // Pendulum Physics state per frame (starts straight at 0 rad)
+        const frameStates = ITEMS.map(() => ({
+            angle: 0,
             vel: 0,
             x: 0,
             width: 0,
             height: 0,
             wireLength: 80,
+            lastNudge: 0,
         }));
 
         const galleryStage = document.getElementById('galleryStage');
@@ -574,7 +614,7 @@
 
             const stageContainer = document.createElement('div');
             stageContainer.id = 'framesTrack';
-            stageContainer.className = 'absolute top-0 flex items-start transition-transform ease-out';
+            stageContainer.className = 'absolute top-0 left-0 flex items-start';
             stageContainer.style.willChange = 'transform';
 
             // Responsive scale unit based on viewport
@@ -594,6 +634,8 @@
                 frameStates[i].width = frameW;
                 frameStates[i].height = frameH;
                 frameStates[i].wireLength = wireDrop;
+                frameStates[i].angle = 0;
+                frameStates[i].vel = 0;
 
                 const frameNode = document.createElement('div');
                 frameNode.className = `picture-frame-wrap relative flex flex-col items-center flex-shrink-0 cursor-pointer mx-2 sm:mx-4 ${i === activeIndex ? 'active' : ''}`;
@@ -620,19 +662,27 @@
 
                     <!-- Gallery Picture Frame Fixture & Lamp -->
                     <div class="relative flex flex-col items-center w-full" id="frameBox-${i}">
-                        <!-- Brass Lamp Arm & Cylinder -->
-                        <div class="relative -mb-1 z-20 flex flex-col items-center">
-                            <div class="w-1 h-2 sm:h-2.5 bg-amber-600 rounded-sm"></div>
-                            <div class="w-8 sm:w-10 h-1.5 sm:h-2 bg-gradient-to-r from-amber-600 via-amber-300 to-amber-700 rounded-full shadow-sm"></div>
+                        <!-- Ambient Wall Glow behind Active Frame -->
+                        <div class="wall-glow"></div>
+
+                        <!-- Brass Lamp Hood & Bracket Arm -->
+                        <div class="relative z-20 flex flex-col items-center">
+                            <div class="relative w-8 sm:w-10 h-1.5 sm:h-2 bg-gradient-to-r from-amber-700 via-amber-300 to-amber-700 rounded-t-full shadow-sm flex items-end justify-center">
+                                <div class="spotlight-bulb w-5 sm:w-7 h-[1.5px] rounded-full bg-amber-100 opacity-0 transition-opacity duration-300 shadow-[0_0_6px_2px_rgba(255,230,130,0.85)]"></div>
+                            </div>
+                            <div class="w-1 h-1.5 sm:h-2 bg-gradient-to-b from-amber-600 to-amber-800"></div>
                         </div>
 
-                        <!-- Warm Spotlight Beam -->
+                        <!-- Downward Warm Spotlight Cone from Lamp Hood -->
                         <div class="spotlight-cone"></div>
 
                         <!-- The Actual Framed Artwork -->
-                        <div class="relative w-full rounded-[5px] sm:rounded-[6px] overflow-hidden ${mouldingClass} p-1.5 sm:p-2 transition-transform duration-300 ease-out">
+                        <div class="relative z-10 w-full rounded-[5px] sm:rounded-[6px] overflow-hidden ${mouldingClass} p-1.5 sm:p-2 transition-transform duration-300 ease-out">
+                            <!-- Internal Artwork Surface Illumination -->
+                            <div class="artwork-light"></div>
+
                             <div class="w-full ${matPadding} rounded-[2px] overflow-hidden shadow-inner flex items-center justify-center">
-                                <img src="${item.image}" alt="${item.title}" class="w-full object-cover rounded-[2px]" style="height: ${frameH}px;">
+                                <img src="${item.image}" alt="${item.title}" class="w-full object-cover rounded-[2px]" style="height: ${frameH}px;" draggable="false">
                             </div>
 
                             <!-- Small Brass Frame Tag Label -->
@@ -643,13 +693,17 @@
                     </div>
                 `;
 
-                // Frame Interactions
-                frameNode.addEventListener('mouseenter', () => {
-                    setActiveFrame(i);
-                    nudgePendulum(i, 3.5);
+                // Frame Hover: Focus in-place without scrolling the track away from mouse
+                frameNode.addEventListener('mouseenter', (e) => {
+                    const rect = frameNode.getBoundingClientRect();
+                    const fromLeft = e.clientX < rect.left + rect.width / 2;
+                    setActiveFrame(i, { scroll: false });
+                    nudgePendulum(i, fromLeft ? -0.55 : 0.55);
                 });
 
                 frameNode.addEventListener('click', () => {
+                    if (dragMovedPx > 6) return;
+                    setActiveFrame(i, { scroll: true });
                     openDetailModal(i);
                 });
 
@@ -658,7 +712,7 @@
 
             galleryStage.appendChild(stageContainer);
             initDots();
-            updateTrackPosition();
+            setActiveFrame(activeIndex, { scroll: true, immediate: true });
         }
 
         /**
@@ -672,8 +726,9 @@
                 dot.className = `w-2 h-2 rounded-full transition-all ${idx === activeIndex ? 'bg-amber-500 w-5' : 'bg-border hover:bg-muted'}`;
                 dot.setAttribute('aria-label', `Go to exhibit ${idx + 1}`);
                 dot.addEventListener('click', () => {
-                    setActiveFrame(idx);
-                    nudgePendulum(idx, 3.0);
+                    const dir = idx >= activeIndex ? 1 : -1;
+                    setActiveFrame(idx, { scroll: true });
+                    nudgePendulum(idx, dir * 1.0);
                     pauseAutoplay();
                 });
                 dotsContainer.appendChild(dot);
@@ -691,10 +746,19 @@
          * Pendulum physics impulse & simulation loop
          */
         function nudgePendulum(idx, impulseDeg) {
-            if (frameStates[idx]) {
-                frameStates[idx].vel += (impulseDeg * Math.PI) / 180;
-                if (frameStates[idx - 1]) frameStates[idx - 1].vel -= (impulseDeg * 0.35 * Math.PI) / 180;
-                if (frameStates[idx + 1]) frameStates[idx + 1].vel += (impulseDeg * 0.35 * Math.PI) / 180;
+            const now = performance.now();
+            const st = frameStates[idx];
+            if (!st || now - st.lastNudge < 300) return;
+            st.lastNudge = now;
+
+            const radImpulse = (impulseDeg * Math.PI) / 180;
+            st.vel = Math.max(-0.06, Math.min(0.06, st.vel + radImpulse));
+
+            if (frameStates[idx - 1]) {
+                frameStates[idx - 1].vel = Math.max(-0.03, Math.min(0.03, frameStates[idx - 1].vel - radImpulse * 0.25));
+            }
+            if (frameStates[idx + 1]) {
+                frameStates[idx + 1].vel = Math.max(-0.03, Math.min(0.03, frameStates[idx + 1].vel + radImpulse * 0.25));
             }
         }
 
@@ -703,14 +767,20 @@
             const dt = Math.min((now - lastTime) / 1000, 0.05);
             lastTime = now;
 
-            const gravityFactor = 28;
-            const damping = 2.4;
+            const gravityFactor = 11;
+            const damping = 3.8;
+            const maxAngleRad = (2.2 * Math.PI) / 180;
 
             ITEMS.forEach((_, i) => {
                 const st = frameStates[i];
                 const acc = -gravityFactor * Math.sin(st.angle) - damping * st.vel;
                 st.vel += acc * dt;
-                st.angle += st.vel * dt;
+                st.angle = Math.max(-maxAngleRad, Math.min(maxAngleRad, st.angle + st.vel * dt));
+
+                if (Math.abs(st.angle) < 0.0004 && Math.abs(st.vel) < 0.0004) {
+                    st.angle = 0;
+                    st.vel = 0;
+                }
 
                 const node = document.querySelector(`.picture-frame-wrap[data-index="${i}"]`);
                 if (node) {
@@ -720,7 +790,8 @@
             });
 
             // Smooth scroll tracking
-            stageScrollX += (targetScrollX - stageScrollX) * 0.12;
+            const lerpFactor = 1 - Math.exp(-5.5 * dt);
+            stageScrollX += (targetScrollX - stageScrollX) * lerpFactor;
             const track = document.getElementById('framesTrack');
             if (track) {
                 track.style.transform = `translateX(${stageScrollX.toFixed(2)}px)`;
@@ -732,8 +803,9 @@
         /**
          * Set Active Focused Frame
          */
-        function setActiveFrame(index) {
+        function setActiveFrame(index, options = {}) {
             if (index < 0 || index >= ITEMS.length) return;
+            const { scroll = true, immediate = false } = options;
             activeIndex = index;
 
             document.querySelectorAll('.picture-frame-wrap').forEach((node, i) => {
@@ -744,33 +816,51 @@
             activeInfoText.innerHTML = `<strong>[0${index + 1}/09] ${current.title}</strong> · <span class="text-amber-500 underline cursor-pointer" onclick="openDetailModal(${index})">Tap to Inspect</span>`;
 
             updateDots();
-            updateTrackPosition();
+            if (scroll) {
+                updateTrackPosition(immediate);
+            }
         }
 
-        function updateTrackPosition() {
+        function updateTrackPosition(immediate = false) {
             const frameNodes = document.querySelectorAll('.picture-frame-wrap');
             if (!frameNodes[activeIndex] || !galleryStage) return;
 
-            const stageRect = galleryStage.getBoundingClientRect();
+            const stageWidth = galleryStage.clientWidth;
             const activeNode = frameNodes[activeIndex];
             const nodeOffset = activeNode.offsetLeft + activeNode.offsetWidth / 2;
 
-            targetScrollX = stageRect.width / 2 - nodeOffset;
+            targetScrollX = stageWidth / 2 - nodeOffset;
+            if (immediate) {
+                stageScrollX = targetScrollX;
+                const track = document.getElementById('framesTrack');
+                if (track) {
+                    track.style.transform = `translateX(${stageScrollX.toFixed(2)}px)`;
+                }
+            }
         }
 
         // Previous / Next Buttons
         document.getElementById('prevFrameBtn').addEventListener('click', () => {
             const nextIdx = (activeIndex - 1 + ITEMS.length) % ITEMS.length;
-            setActiveFrame(nextIdx);
-            nudgePendulum(nextIdx, -3.5);
+            setActiveFrame(nextIdx, { scroll: true });
+            nudgePendulum(nextIdx, -1.1);
             pauseAutoplay();
         });
 
         document.getElementById('nextFrameBtn').addEventListener('click', () => {
             const nextIdx = (activeIndex + 1) % ITEMS.length;
-            setActiveFrame(nextIdx);
-            nudgePendulum(nextIdx, 3.5);
+            setActiveFrame(nextIdx, { scroll: true });
+            nudgePendulum(nextIdx, 1.1);
             pauseAutoplay();
+        });
+
+        // Pause autoplay movement while mouse is hovering over stage
+        galleryStage.addEventListener('mouseenter', () => {
+            isStageHovered = true;
+        });
+
+        galleryStage.addEventListener('mouseleave', () => {
+            isStageHovered = false;
         });
 
         /**
@@ -779,10 +869,11 @@
         function startAutoplay() {
             if (autoplayInterval) clearInterval(autoplayInterval);
             autoplayInterval = setInterval(() => {
+                if (isStageHovered || isDragging) return;
                 const nextIdx = (activeIndex + 1) % ITEMS.length;
-                setActiveFrame(nextIdx);
-                nudgePendulum(nextIdx, 2.5);
-            }, 2600);
+                setActiveFrame(nextIdx, { scroll: true });
+                nudgePendulum(nextIdx, 0.9);
+            }, 3000);
             isAutoplay = true;
             document.getElementById('autoplayLabel').textContent = "Pause Tour";
             document.getElementById('autoplayIcon').setAttribute('data-lucide', 'pause');
@@ -867,13 +958,13 @@
             if (e.key === 'Escape') closeDetailModal();
             if (e.key === 'ArrowRight') {
                 const nextIdx = (activeIndex + 1) % ITEMS.length;
-                setActiveFrame(nextIdx);
-                nudgePendulum(nextIdx, 3.0);
+                setActiveFrame(nextIdx, { scroll: true });
+                nudgePendulum(nextIdx, 1.1);
             }
             if (e.key === 'ArrowLeft') {
                 const prevIdx = (activeIndex - 1 + ITEMS.length) % ITEMS.length;
-                setActiveFrame(prevIdx);
-                nudgePendulum(prevIdx, -3.0);
+                setActiveFrame(prevIdx, { scroll: true });
+                nudgePendulum(prevIdx, -1.1);
             }
         });
 
@@ -886,18 +977,37 @@
         galleryStage.addEventListener('mousedown', (e) => {
             isDragging = true;
             dragStartX = e.clientX;
+            dragMovedPx = 0;
             pauseAutoplay();
         });
 
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             const deltaX = e.clientX - dragStartX;
+            dragMovedPx += Math.abs(deltaX);
             dragStartX = e.clientX;
-            targetScrollX += deltaX * 1.1;
+            targetScrollX += deltaX * 0.95;
         });
 
         window.addEventListener('mouseup', () => {
-            if (isDragging) isDragging = false;
+            if (isDragging) {
+                isDragging = false;
+                if (dragMovedPx > 6) {
+                    const frameNodes = document.querySelectorAll('.picture-frame-wrap');
+                    const stageCenter = galleryStage.clientWidth / 2 - targetScrollX;
+                    let closestIdx = activeIndex;
+                    let minDist = Infinity;
+                    frameNodes.forEach((node, idx) => {
+                        const center = node.offsetLeft + node.offsetWidth / 2;
+                        const dist = Math.abs(center - stageCenter);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestIdx = idx;
+                        }
+                    });
+                    setActiveFrame(closestIdx, { scroll: true });
+                }
+            }
         });
 
         galleryStage.addEventListener('touchstart', (e) => {
@@ -906,6 +1016,7 @@
                 touchStartX = e.touches[0].clientX;
                 dragStartX = touchStartX;
                 touchDeltaX = 0;
+                dragMovedPx = 0;
                 pauseAutoplay();
             }
         }, { passive: true });
@@ -914,23 +1025,23 @@
             if (!isDragging || e.touches.length === 0) return;
             const currentX = e.touches[0].clientX;
             const deltaX = currentX - dragStartX;
+            dragMovedPx += Math.abs(deltaX);
             touchDeltaX = currentX - touchStartX;
             dragStartX = currentX;
-            targetScrollX += deltaX * 1.15;
+            targetScrollX += deltaX * 1.0;
         }, { passive: true });
 
         galleryStage.addEventListener('touchend', () => {
             if (isDragging) {
                 isDragging = false;
-                // If swipe gesture exceeded threshold, navigate next/prev frame
                 if (touchDeltaX < -40) {
                     const nextIdx = Math.min(ITEMS.length - 1, activeIndex + 1);
-                    setActiveFrame(nextIdx);
-                    nudgePendulum(nextIdx, 3.0);
+                    setActiveFrame(nextIdx, { scroll: true });
+                    nudgePendulum(nextIdx, 1.1);
                 } else if (touchDeltaX > 40) {
                     const prevIdx = Math.max(0, activeIndex - 1);
-                    setActiveFrame(prevIdx);
-                    nudgePendulum(prevIdx, -3.0);
+                    setActiveFrame(prevIdx, { scroll: true });
+                    nudgePendulum(prevIdx, -1.1);
                 } else {
                     updateTrackPosition();
                 }

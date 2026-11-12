@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Square Wave Fourier Series (HTML Canvas)</title>
+  <!-- KaTeX for LaTeX Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false});"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial;
+      background: #0b0f14;
+      color: #e7edf5;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 12px 0;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.5fr 0.5fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    canvas {
+      width: 100%;
+      height: 520px;
+      background: #071019;
+      border: 1px solid #1f2a37;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .panel {
+      border: 1px solid #1f2a37;
+      border-radius: 10px;
+      padding: 12px;
+      background: #0a1320;
+    }
+
+    details.panel {
+      margin-top: 12px;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    details.panel summary {
+      padding: 12px 14px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #e7edf5;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      list-style: none;
+    }
+
+    details.panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.panel summary:hover {
+      background: #0f1c2d;
+    }
+
+    details.panel summary::after {
+      content: "▼";
+      font-size: 10px;
+      color: #8ba2be;
+      transition: transform 0.2s ease;
+      transform: rotate(-90deg);
+    }
+
+    details.panel[open] summary::after {
+      transform: rotate(0deg);
+    }
+
+    .accordion-body {
+      padding: 14px 16px;
+      border-top: 1px solid #1f2a37;
+      line-height: 1.65;
+      font-size: 13px;
+      color: #cdd7e4;
+      background: #080f1a;
+    }
+
+    .accordion-body h3 {
+      font-size: 13.5px;
+      font-weight: 600;
+      margin: 14px 0 6px 0;
+      color: #ffffff;
+    }
+
+    .accordion-body h3:first-child {
+      margin-top: 0;
+    }
+
+    .accordion-body p {
+      margin: 6px 0;
+    }
+
+    .accordion-body ul {
+      margin: 6px 0 10px 18px;
+      padding: 0;
+    }
+
+    .accordion-body li {
+      margin-bottom: 4px;
+    }
+
+    .katex-display {
+      margin: 8px 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 4px 0;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .row+.row {
+      margin-top: 10px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #cdd7e4;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button {
+      background: #12263b;
+      color: #e7edf5;
+      border: 1px solid #23405f;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    button:hover {
+      background: #16314d;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: #cdd7e4;
+    }
+
+    .note {
+      margin-top: 10px;
+      line-height: 1.45;
+      font-size: 12.5px;
+      color: #cdd7e4;
+    }
+
+    .kbd {
+      border: 1px solid #2b3b52;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: #0f1c2b;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #2b3b52;
+      background: #0f1c2b;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>사각파 푸리에 분해 (HTML Canvas)</h1>
+
+    <div class="grid">
+      <canvas id="cv" width="1100" height="520"></canvas>
+
+      <div class="panel">
+        <div class="row">
+          <label>고조파 개수 N (부분합에 포함할 홀수항 개수)</label>
+          <div class="mono"><span class="badge">N = <span id="nOut">10</span></span></div>
+        </div>
+        <input id="nRange" type="range" min="1" max="80" step="1" value="10" />
+
+        <div class="row">
+          <label>시간 스케일 (회전 속도)</label>
+          <div class="mono"><span class="badge">speed = <span id="sOut">1.00</span></span></div>
+        </div>
+        <input id="speedRange" type="range" min="0.1" max="3.0" step="0.05" value="1.0" />
+
+        <div class="row">
+          <label>표시할 주기 수 (x축 범위)</label>
+          <div class="mono"><span class="badge"><span id="pOut">2</span> periods</span></div>
+        </div>
+        <input id="periodRange" type="range" min="1" max="5" step="1" value="2" />
+
+        <div class="row">
+          <label>사각파 기준(목표 파형) 표시</label>
+          <div class="mono">
+            <input id="showTarget" type="checkbox" checked />
+          </div>
+        </div>
+
+        <div class="row">
+          <label>회전 벡터(기하학) 표시</label>
+          <div class="mono">
+            <input id="showVectors" type="checkbox" checked />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button id="playBtn">Pause</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="note">
+          <div><span class="kbd">설명</span></div>
+          <ul>
+            <li>오른쪽의 “회전하는 벡터” 합은 복소수 평면에서 각 주파수 성분이 <b>각속도(주파수)만큼 회전</b>하고, 그 벡터들의 끝점을 더한 값이 시간영역의 신호가 된다는 직관을 보여줍니다.
+            </li>
+            <li>부분합이 커질수록 경계에서 <b>깁스 현상(Gibbs)</b>으로 오버슈트가 남습니다.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <details class="panel">
+      <summary>수학적 증명 (푸리에 급수로 사각파 분해)</summary>
+      <div class="accordion-body">
+        <h3>1) 정의 (주기 $2\pi$, 진폭 $\pm 1$인 사각파)</h3>
+        <p>
+          $$f(x) = \begin{cases} 1 & (0 < x < \pi) \\ -1 & (-\pi < x < 0) \end{cases}$$ 구간 외에서는 $2\pi$-주기적으로 연장된다
+            ($f(x+2\pi)=f(x)$). 이 함수는 원점에 대해 대칭인 <b>홀함수(odd function)</b>이므로 코사인 항($a_n$)은 모두 $0$이고, 사인 항($b_n$)만 남는다.
+        </p>
+
+        <h3>2) 푸리에 계수 공식 ($2\pi$-주기 함수)</h3>
+        <p>
+          $$a_0 = \frac{1}{\pi} \int_{-\pi}^{\pi} f(x)\,dx$$
+          $$a_n = \frac{1}{\pi} \int_{-\pi}^{\pi} f(x) \cos(nx)\,dx$$
+          $$b_n = \frac{1}{\pi} \int_{-\pi}^{\pi} f(x) \sin(nx)\,dx$$
+          홀함수 $f(x)$와 짝함수 $\cos(nx)$의 곱은 홀함수이므로 대칭 구간 적분에 의해 $a_n = 0$이 되며, 대칭성으로 평균값 $a_0 = 0$이다.
+        </p>
+
+        <h3>3) $b_n$ 계산</h3>
+        <p>
+          $f(x)$는 홀함수, $\sin(nx)$도 홀함수이므로 두 함수의 곱은 짝함수이다. 따라서 구간을 절반으로 줄이고 $2$를 곱하여 계산할 수 있다.
+          $$b_n = \frac{2}{\pi} \int_{0}^{\pi} f(x) \sin(nx)\,dx = \frac{2}{\pi} \int_{0}^{\pi} 1 \cdot \sin(nx)\,dx$$
+          $$= \frac{2}{\pi} \left[ -\frac{\cos(nx)}{n} \right]_{0}^{\pi} = \frac{2}{\pi} \left( \frac{1 - \cos(n\pi)}{n}
+          \right)$$
+          $\cos(n\pi) = (-1)^n$이므로:
+        </p>
+        <ul>
+          <li>$n$이 짝수이면: $(-1)^n = 1 \implies b_n = 0$</li>
+          <li>$n$이 홀수이면: $(-1)^n = -1 \implies b_n = \frac{2}{\pi} \left( \frac{1 - (-1)}{n} \right) = \frac{4}{\pi n}$
+          </li>
+        </ul>
+
+        <h3>4) 사각파의 푸리에 급수</h3>
+        <p>
+          홀수 $n = 2k+1\;(k=0, 1, 2, \dots)$ 항만 남으므로 급수는 다음과 같이 전개된다.
+          $$f(x) = \sum_{n=1}^{\infty} b_n \sin(nx) = \sum_{k=0}^{\infty} \frac{4}{\pi (2k+1)} \sin((2k+1)x)$$
+          사각파는 <b>홀수 고조파(odd harmonics)</b>만을 포함하며, 각 고조파의 진폭은 $\frac{1}{2k+1}$ 비율로 감쇠한다.
+        </p>
+
+        <h3>5) 기하학적 직관과 푸리에 변환</h3>
+        <p>
+          시간영역 신호는 복소평면에서 $e^{i\omega t}$로 회전하는 성분들의 <b>벡터 합</b>으로 볼 수 있다. 여기서는 연속 스펙트럼(푸리에 변환)이 아니라 주기 신호이므로 이산
+          스펙트럼(푸리에 급수)으로 나타나며, 각 홀수 고조파(정수배)마다 회전 벡터가 하나씩 대응되어 최종 파형을 합성한다.
+        </p>
+      </div>
+    </details>
+
+    <script>
+      /**
+       * Zero-dependency Canvas visualization of Fourier series approximation of a square wave.
+       *
+       * 핵심 아이디어:
+       * - 사각파(주기 2π, ±1)는 홀수 사인항만 존재:
+       *     S_N(t) = sum_{k=0}^{N-1} (4/(π(2k+1))) * sin((2k+1) t)
+       * - 복소수 관점(기하학 직관):
+       *     sin(ωt) 는 Im(e^{iωt}) 와 연결됨.
+       *   각 주파수 성분을 "회전하는 벡터"로 그리고,
+       *   그 벡터들의 합(끝점)이 시간영역의 값(부분합)에 대응.
+       *
+       * 성능(Big-O):
+       * - 매 프레임 계산은 O(N + W) 정도로 설계.
+       *   N: 고조파 수, W: 화면에 그릴 샘플 수(가로 픽셀 기반).
+       * - W는 캔버스 폭에 비례하고, N은 슬라이더로 제한.
+       */
+
+      (() => {
+        const cv = document.getElementById('cv');
+        const ctx = cv.getContext('2d');
+
+        // UI
+        const nRange = document.getElementById('nRange');
+        const nOut = document.getElementById('nOut');
+        const speedRange = document.getElementById('speedRange');
+        const sOut = document.getElementById('sOut');
+        const periodRange = document.getElementById('periodRange');
+        const pOut = document.getElementById('pOut');
+        const showTarget = document.getElementById('showTarget');
+        const showVectors = document.getElementById('showVectors');
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // State
+        let N = +nRange.value;         // number of odd harmonics
+        let speed = +speedRange.value; // time scale
+        let periods = +periodRange.value;
+        let running = true;
+
+        // Animation time
+        let t = 0;
+        let lastTs = performance.now();
+
+        function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+
+        function resizeCanvasToCSS() {
+          // Keep internal pixel size in sync for crisp lines on high-DPI screens.
+          const dpr = window.devicePixelRatio || 1;
+          const rect = cv.getBoundingClientRect();
+          const w = Math.max(300, Math.floor(rect.width * dpr));
+          const h = Math.max(200, Math.floor(rect.height * dpr));
+          if (cv.width !== w || cv.height !== h) {
+            cv.width = w;
+            cv.height = h;
+          }
+        }
+
+        // Square wave target: ±1 with period 2π
+        function squareWave(x) {
+          // define on (-π, π), then wrap by modulo.
+          let u = ((x + Math.PI) % (2 * Math.PI));
+          if (u < 0) u += 2 * Math.PI;
+          u -= Math.PI; // now in (-π, π]
+          // at discontinuities return 0 for visual stability
+          if (Math.abs(u) < 1e-6 || Math.abs(Math.abs(u) - Math.PI) < 1e-6) return 0;
+          return (u > 0) ? 1 : -1;
+        }
+
+        // Fourier partial sum for square wave:
+        // S_N(x) = sum_{k=0}^{N-1} 4/(π(2k+1)) sin((2k+1)x)
+        function fourierSquarePartial(x, N) {
+          let s = 0;
+          for (let k = 0; k < N; k++) {
+            const n = 2 * k + 1;
+            s += (4 / (Math.PI * n)) * Math.sin(n * x);
+          }
+          return s;
+        }
+
+        // Draw helpers
+        function clear() {
+          ctx.clearRect(0, 0, cv.width, cv.height);
+          // subtle background grid
+          ctx.fillStyle = '#071019';
+          ctx.fillRect(0, 0, cv.width, cv.height);
+        }
+
+        function drawGrid(x0, y0, w, h, nx, ny) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+          ctx.lineWidth = 1;
+
+          for (let i = 0; i <= nx; i++) {
+            const x = x0 + (w * i) / nx;
+            ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y0 + h); ctx.stroke();
+          }
+          for (let j = 0; j <= ny; j++) {
+            const y = y0 + (h * j) / ny;
+            ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawAxes(x0, y0, w, h, yMid) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(226, 232, 240, 0.25)';
+          ctx.lineWidth = 1.5;
+          // x-axis (signal midline)
+          ctx.beginPath();
+          ctx.moveTo(x0, yMid);
+          ctx.lineTo(x0 + w, yMid);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function drawText(x, y, text, color = '#cdd7e4') {
+          ctx.save();
+          ctx.fillStyle = color;
+          ctx.font = `${Math.max(12, Math.floor(cv.width / 110))}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+          ctx.fillText(text, x, y);
+          ctx.restore();
+        }
+
+        // Main render
+        function render(ts) {
+          const dt = (ts - lastTs) / 1000;
+          lastTs = ts;
+
+          if (running) {
+            // advance time; scaling chosen for nice rotation speed
+            t += dt * speed * 1.4;
+          }
+
+          resizeCanvasToCSS();
+          clear();
+
+          // Layout: left = time-domain wave, right = vector epicycle diagram
+          const pad = 18 * (window.devicePixelRatio || 1);
+          const W = cv.width, H = cv.height;
+
+          const leftW = Math.floor(W * 0.62);
+          const rightW = W - leftW;
+
+          const left = { x: pad, y: pad, w: leftW - pad * 1.5, h: H - pad * 2 };
+          const right = { x: leftW + pad * 0.3, y: pad, w: rightW - pad * 1.3, h: H - pad * 2 };
+
+          // ----- LEFT: Wave plot -----
+          drawGrid(left.x, left.y, left.w, left.h, 10, 8);
+          const yMid = left.y + left.h / 2;
+          drawAxes(left.x, left.y, left.w, left.h, yMid);
+
+          // x range spans `periods` periods of 2π centered around current time t
+          // We'll map screen x -> xVal in [t - periods*π, t + periods*π]
+          const xSpan = periods * 2 * Math.PI;
+          const xMin = t - xSpan / 2;
+          const xMax = t + xSpan / 2;
+
+          // y scaling: square wave is ±1, but partial sum overshoots slightly, so keep headroom
+          const yMax = 1.4; // visual clamp range
+          const yScale = (left.h * 0.42) / yMax;
+
+          function xToScreen(xVal) {
+            const u = (xVal - xMin) / (xMax - xMin);
+            return left.x + u * left.w;
+          }
+          function yToScreen(yVal) {
+            return yMid - clamp(yVal, -2, 2) * yScale;
+          }
+
+          // Draw target square wave
+          if (showTarget.checked) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)'; // cyan
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const samples = Math.max(200, Math.floor(left.w)); // O(W) sampling
+            for (let i = 0; i <= samples; i++) {
+              const u = i / samples;
+              const xVal = xMin + u * (xMax - xMin);
+              const yVal = squareWave(xVal);
+              const sx = xToScreen(xVal);
+              const sy = yToScreen(yVal);
+              if (i === 0) ctx.moveTo(sx, sy);
+              else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Draw Fourier partial sum
+          ctx.save();
+          ctx.strokeStyle = 'rgba(244, 114, 182, 0.9)'; // pink
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          const samples = Math.max(200, Math.floor(left.w)); // O(W)
+          for (let i = 0; i <= samples; i++) {
+            const u = i / samples;
+            const xVal = xMin + u * (xMax - xMin);
+            const yVal = fourierSquarePartial(xVal, N);
+            const sx = xToScreen(xVal);
+            const sy = yToScreen(yVal);
+            if (i === 0) ctx.moveTo(sx, sy);
+            else ctx.lineTo(sx, sy);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          // Mark current time t vertical line and current value
+          const yNow = fourierSquarePartial(t, N);
+          const xNow = xToScreen(t);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(226, 232, 240, 0.25)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(xNow, left.y);
+          ctx.lineTo(xNow, left.y + left.h);
+          ctx.stroke();
+
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.95)';
+          ctx.beginPath();
+          ctx.arc(xNow, yToScreen(yNow), 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          drawText(left.x + 8, left.y + 18, `Time-domain: harmonics (N=${N})`, '#e7edf5');
+          drawText(left.x + 8, left.y + 40, `S_N(t) ≈ ${yNow.toFixed(4)}`, 'rgba(244, 114, 182, 0.95)');
+
+          // ----- RIGHT: Vector (epicycle) diagram -----
+          drawGrid(right.x, right.y, right.w, right.h, 8, 8);
+
+          const cx = right.x + right.w / 2;
+          const cy = right.y + right.h / 2;
+
+          // Scale vectors so the chain fits comfortably.
+          // The sum of magnitudes is roughly (4/π) * (1 + 1/3 + 1/5 + ...) ~ (4/π) * log(N)
+          // We'll normalize by a factor to fit inside right panel.
+          const baseRadius = Math.min(right.w, right.h) * 0.30;
+
+          // Compute vector chain and also generate y(t) as the final "vertical projection".
+          // We use cosine/sine param with phase shift to make the final y match the partial sum.
+          // Note: sin(n t) can be represented as y-component of a rotating vector of angle n t:
+          //   vector(n) = A_n * (cos(n t - π/2), sin(n t - π/2)) so that its x-component is A_n sin(n t), y-component is -A_n cos(...)
+          // But to keep intuitive, we will directly draw each vector with angle n t, and take its y-component with a phase shift of -π/2 so that
+          // the "vertical" component chain equals sum A_n sin(n t).
+          let px = cx, py = cy; // current chain end
+          const maxK = N;
+
+          // Pre-draw center point
+          ctx.save();
+          ctx.fillStyle = 'rgba(226, 232, 240, 0.6)';
+          ctx.beginPath(); ctx.arc(cx, cy, 2.2, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+
+          // Draw vector chain
+          if (showVectors.checked) {
+            for (let k = 0; k < maxK; k++) {
+              const n = 2 * k + 1;
+              const A = (4 / (Math.PI * n));
+
+              // Normalize A to screen length
+              const len = A * baseRadius;
+
+              // Phase shift: use angle = n*t - π/2 so that y-component becomes sin(n*t) scaled
+              const ang = n * t - Math.PI / 2;
+              const vx = Math.cos(ang) * len;
+              const vy = Math.sin(ang) * len;
+
+              // Circle showing this vector's rotation locus (optional but helpful)
+              ctx.save();
+              ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+              ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.arc(px, py, Math.abs(len), 0, Math.PI * 2); ctx.stroke();
+              ctx.restore();
+
+              // Vector line
+              const nx = px + vx;
+              const ny = py + vy;
+
+              ctx.save();
+              ctx.strokeStyle = `rgba(56, 189, 248, ${0.18 + 0.75 * (1 - k / maxK)})`;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(px, py);
+              ctx.lineTo(nx, ny);
+              ctx.stroke();
+
+              // endpoint dot
+              ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
+              ctx.beginPath(); ctx.arc(nx, ny, 2.3, 0, Math.PI * 2); ctx.fill();
+              ctx.restore();
+
+              px = nx; py = ny;
+            }
+          } else {
+            // If vectors are hidden, still compute the final endpoint for display consistency.
+            for (let k = 0; k < maxK; k++) {
+              const n = 2 * k + 1;
+              const A = (4 / (Math.PI * n));
+              const len = A * baseRadius;
+              const ang = n * t - Math.PI / 2;
+              px += Math.cos(ang) * len;
+              py += Math.sin(ang) * len;
+            }
+          }
+
+          // The final endpoint's y-displacement from center corresponds (up to scaling) to S_N(t).
+          // Let's draw a projection line from endpoint to the midline of wave plot.
+          ctx.save();
+          ctx.strokeStyle = 'rgba(244, 114, 182, 0.8)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(px, cy);
+          ctx.stroke();
+          ctx.restore();
+
+          // Endpoint highlight
+          ctx.save();
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.95)';
+          ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+
+          drawText(right.x + 8, right.y + 18, 'Geometric view: rotation', '#e7edf5');
+
+          // Helper label: show current t and harmonics
+          drawText(right.x + 8, right.y + 40, `t = ${t.toFixed(3)} rad`, 'rgba(226, 232, 240, 0.75)');
+          drawText(right.x + 8, right.y + 62, `Harmonics: 1,3,5,...,(2N-1)`, 'rgba(56, 189, 248, 0.85)');
+
+          // Also show Gibbs region cue: where target jumps (0, ±π, ...)
+          // This is intentionally minimal to avoid clutter.
+
+          requestAnimationFrame(render);
+        }
+
+        // UI events
+        nRange.addEventListener('input', () => {
+          N = +nRange.value;
+          nOut.textContent = String(N);
+        });
+        speedRange.addEventListener('input', () => {
+          speed = +speedRange.value;
+          sOut.textContent = speed.toFixed(2);
+        });
+        periodRange.addEventListener('input', () => {
+          periods = +periodRange.value;
+          pOut.textContent = String(periods);
+        });
+
+        playBtn.addEventListener('click', () => {
+          running = !running;
+          playBtn.textContent = running ? 'Pause' : 'Play';
+        });
+
+        resetBtn.addEventListener('click', () => {
+          t = 0;
+          lastTs = performance.now();
+        });
+
+        // init UI
+        nOut.textContent = String(N);
+        sOut.textContent = speed.toFixed(2);
+        pOut.textContent = String(periods);
+
+        // Kick off
+        resizeCanvasToCSS();
+        requestAnimationFrame(render);
+
+        // Re-render crisp on resize
+        window.addEventListener('resize', () => {
+          resizeCanvasToCSS();
+        });
+      })();
+    </script>
+</body>
+
+</html>
