@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Linear SVM: Maximum Margin & Gradient Descent Simulator</title>
+
+  <!-- KaTeX for LaTeX Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false});"></script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --panel: #0a1320;
+      --border: #1f2a37;
+      --text: #e7edf5;
+      --accent: #38bdf8;
+      --margin-color: #fbbf24;
+      --class-neg: #ef4444;
+      --class-pos: #3b82f6;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      margin: 0 0 0.5rem 0;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 1.2rem;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    canvas {
+      background: #071019;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 100%;
+      height: auto;
+      cursor: crosshair;
+    }
+
+    /* Controls */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .val-badge {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    button {
+      flex: 0 0 auto;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #1e293b;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      word-break: keep-all;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #334155;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #000;
+      border: none;
+    }
+
+    button.primary:hover {
+      background: #0ea5e9;
+    }
+
+    .stats {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      margin-top: 10px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      background: #080e18;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #142234;
+    }
+
+    .equation {
+      background: #111827;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: #fbbf24;
+      border: 1px solid #233147;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      display: inline-block;
+    }
+
+    .legend-circle {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .legend-ring {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 2px solid var(--margin-color);
+      display: inline-block;
+    }
+
+    /* Theory Accordion */
+    details.panel {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    details.panel summary {
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #e7edf5;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      list-style: none;
+      background: #0d1829;
+      transition: background 0.2s;
+    }
+
+    details.panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.panel summary:hover {
+      background: #122238;
+    }
+
+    details.panel summary::after {
+      content: "▼";
+      font-size: 10px;
+      color: #8ba2be;
+      transition: transform 0.2s ease;
+      transform: rotate(-90deg);
+    }
+
+    details.panel[open] summary::after {
+      transform: rotate(0deg);
+    }
+
+    .accordion-body {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      line-height: 1.65;
+      font-size: 0.85rem;
+      color: #cdd7e4;
+      background: #080f1a;
+    }
+
+    .accordion-body h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 14px 0 6px 0;
+      color: #ffffff;
+    }
+
+    .accordion-body h3:first-child {
+      margin-top: 0;
+    }
+
+    .accordion-body p {
+      margin: 6px 0;
+    }
+
+    .accordion-body ul {
+      margin: 6px 0 10px 18px;
+      padding: 0;
+    }
+
+    .accordion-body li {
+      margin-bottom: 4px;
+    }
+
+    .katex-display {
+      margin: 8px 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 4px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div style="max-width:1200px; margin:0 auto;">
+    <h1>Linear SVM Simulator</h1>
+    <div class="subtitle">Linear Support Vector Machine: Primal Soft-Margin Optimization & Subgradient Descent</div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>학습률 (α): <span id="lrVal" class="val-badge">0.010</span></label>
+        <input type="range" id="lrRange" min="0.001" max="0.05" step="0.001" value="0.01">
+      </div>
+      <div class="control-group">
+        <label>페널티 (C): <span id="cVal" class="val-badge">15.0</span></label>
+        <input type="range" id="cRange" min="1.0" max="50.0" step="0.5" value="15.0">
+      </div>
+      <div class="control-group">
+        <label>실행속도 (Iter/Frame): <span id="speedVal" class="val-badge">2</span></label>
+        <input type="range" id="speedRange" min="1" max="20" step="1" value="2">
+      </div>
+      <div class="control-group">
+        <label>노이즈 (σ): <span id="noiseVal" class="val-badge">1.0</span></label>
+        <input type="range" id="noiseRange" min="0.5" max="3.0" step="0.1" value="1.0">
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Left: Data, Hyperplane, Margins, Support Vectors -->
+      <div class="card">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
+          <label style="font-size:0.85rem; color:#fff; white-space:nowrap;">Decision Boundary & Margins</label>
+          <div class="btn-group" style="margin:0;">
+            <button id="resetBtn">리셋</button>
+            <button id="newDataBtn">데이터</button>
+            <button id="toggleBtn" class="primary">시작</button>
+          </div>
+        </div>
+
+        <canvas id="mainCanvas" width="540" height="420"></canvas>
+
+        <div class="legend">
+          <div class="legend-item">
+            <span class="legend-line" style="background:#fbbf24; height:3px;"></span>
+            <span>초평면 ($w^T x + b = 0$)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-line" style="border-top:2px dashed #38bdf8;"></span>
+            <span>양의 마진 ($+1$)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-line" style="border-top:2px dashed #f87171;"></span>
+            <span>음의 마진 ($-1$)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-ring"></span>
+            <span>서포트 벡터 (SV)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-circle" style="background:var(--class-neg);"></span>
+            <span>Class -1</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-circle" style="background:var(--class-pos);"></span>
+            <span>Class +1</span>
+          </div>
+        </div>
+
+        <div class="equation" id="eqDisplay">J(w, b) = 0.5||w||² + C · Hinge Loss = ...</div>
+      </div>
+
+      <!-- Right: Loss Graph & Live Metrics -->
+      <div class="card">
+        <label style="margin-bottom:8px; font-size:0.85rem; color:#fff;">Objective Cost J History</label>
+        <canvas id="lossCanvas" width="500" height="230"></canvas>
+        <div class="stats" id="statsDisplay">Epoch: 0
+          Cost J(w,b): 0.0000
+          Hinge Loss : 0.0000
+          Margin (2/||w||): 0.000
+          Support Vectors : 0 / 0 (0.0%)
+          Accuracy : 0.0%
+          Weights:
+          w1 = 0.000, w2 = 0.000, b = 0.000
+          ||w|| = 0.000</div>
+      </div>
+    </div>
+
+    <!-- Educational Theory Accordion with KaTeX -->
+    <details class="panel">
+      <summary>수학적 원리: 서포트 벡터 머신(SVM)과 서브그래디언트 경사하강법 (자세히 보기)</summary>
+      <div class="accordion-body">
+        <h3>1) 선형 이진 분류와 분리 초평면 (Hyperplane)</h3>
+        <p>
+          입력 벡터 $x = (x_1, x_2)^T$와 클래스 라벨 $y \in \{-1, +1\}$에 대해 선형 분류기는 결정 함수 $f(x) = w^T x + b = w_1 x_1 + w_2 x_2 +
+          b$를 정의한다.
+          $$f(x) = 0 \iff w_1 x_1 + w_2 x_2 + b = 0$$
+          이 직선이 클래스를 양분하는 <b>결정 초평면(Decision Hyperplane)</b>이다.
+        </p>
+
+        <h3>2) 마진(Margin)과 기하학적 정의</h3>
+        <p>
+          초평면을 기준으로 양의 클래스와 음의 클래스가 위치하는 안전 경계면을 각각 다음과 같이 설정한다.
+          $$w^T x + b = +1 \quad \text{및} \quad w^T x + b = -1$$
+          두 평행한 마진 경계선 사이의 기하학적 거리(마진 폭, Margin Width)는 초평면의 법선 벡터 $w$의 크기에 반비례한다.
+          $$\text{Margin Width} = \frac{2}{\|w\|} = \frac{2}{\sqrt{w_1^2 + w_2^2}}$$
+          따라서 마진 폭을 극대화($\max \frac{2}{\|w\|}$)하는 것은 가중치 벡터의 크기를 최소화($\min \frac{1}{2}\|w\|^2$)하는 문제와 동치이다.
+        </p>
+
+        <h3>3) 소프트 마진(Soft-Margin)과 힌지 손실(Hinge Loss)</h3>
+        <p>
+          실제 데이터는 완벽히 선형 분리되지 않거나 노이즈가 존재하므로, 마진 침범 및 오분류를 허용하는 슬랙 변수(Slack Variable) $\xi_i$를 도입한다. 이는 <b>힌지 손실(Hinge
+            Loss)</b> 함수로 표현된다.
+          $$\ell_{\text{hinge}}(y, f(x)) = \max\left(0,\, 1 - y(w^T x + b)\right)$$
+          소프트 마진 SVM의 원문제(Primal Objective)는 마진 극대화 규제항과 힌지 손실의 합으로 정의된다.
+          $$J(w, b) = \frac{1}{2}\|w\|^2 + \frac{C}{m} \sum_{i=1}^{m} \max\left(0,\, 1 - y^{(i)}(w^T x^{(i)} +
+          b)\right)$$
+          여기서 $C$는 마진 폭과 오분류 페널티 사이의 균형을 조절하는 하이퍼파라미터다. $C$가 클수록 마진 위반을 엄격하게 제한하고, $C$가 작을수록 마진 폭을 넓히는 데 집중한다.
+        </p>
+
+        <h3>4) 서포트 벡터(Support Vector)의 조건</h3>
+        <p>
+          마진 점수 $s_i = y^{(i)}(w^T x^{(i)} + b)$에 따라 데이터 포인트는 세 가지 영역으로 나뉜다.
+        </p>
+        <ul>
+          <li>$s_i > 1$: 마진 스트리트 외부에 올바르게 분류된 데이터. 힌지 손실은 $0$이며, 가중치 그래디언트에 기여하지 않는다.</li>
+          <li>$s_i = 1$: 정확히 마진 경계선 위에 걸쳐 있는 핵심 <b>서포트 벡터(Support Vector)</b>.</li>
+          <li>$s_i < 1$: 마진 스트리트 내부를 침범했거나 반대편으로 오분류된 포인트. $1 - s_i$만큼의 손실이 발생하며 서포트 벡터로 취급되어 초평면을 밀어내는 그래디언트를
+              생성한다.</li>
+        </ul>
+
+        <h3>5) 서브그래디언트 경사하강법 (Subgradient Descent)</h3>
+        <p>
+          힌지 손실은 $s_i = 1$에서 꺾이는 비미분 점이 존재하므로 일반 미분 대신 서브그래디언트(Subgradient)를 사용하여 경사하강법을 적용한다.
+          $$\nabla_w J = w + \frac{C}{m} \sum_{i:\, y^{(i)} f(x^{(i)}) < 1} \left( -y^{(i)} x^{(i)} \right)$$ $$\nabla_b
+            J=\frac{C}{m} \sum_{i:\, y^{(i)} f(x^{(i)}) < 1} \left( -y^{(i)} \right)$$ 매 반복마다 학습률 $\alpha$를 곱하여 파라미터를
+            갱신한다: $$w \leftarrow w - \alpha \nabla_w J, \quad b \leftarrow b - \alpha \nabla_b J$$ 이 과정을 통해 모든 점이 아닌 <b>
+            마진을 침범한 서포트 벡터들만의 외력</b>에 의해 초평면이 최적의 균형 위치를 찾아 수렴한다.
+        </p>
+      </div>
+    </details>
+  </div>
+
+  <script>
+    /**
+     * Linear SVM (Support Vector Machine) Simulation
+     * Primal Formulation with Soft-Margin Hinge Loss & Subgradient Descent.
+     * Zero-dependency Canvas implementation.
+     */
+
+    const CONFIG = {
+      width: 540,
+      height: 420,
+      pointRadius: 4.5,
+      colors: {
+        classNeg: '#ef4444',     // Red for y = -1
+        classPos: '#3b82f6',     // Blue for y = +1
+        hyperplane: '#fbbf24',   // Bright amber solid line
+        posMargin: '#38bdf8',    // Cyan dashed line (w^T x + b = +1)
+        negMargin: '#f87171',    // Light red dashed line (w^T x + b = -1)
+        marginBand: 'rgba(251, 191, 36, 0.08)', // Street fill
+        svRing: '#fbbf24',       // Support Vector halo
+        lossLine: '#10b981',     // Green graph
+      }
+    };
+
+    // Model State
+    let weights = { w1: 0.1, w2: 0.1, b: -0.5 };
+    let dataPoints = [];
+    let lossHistory = [];
+    let isLearning = false;
+    let epoch = 0;
+
+    // Hyperparameters
+    let learningRate = 0.010;
+    let C = 15.0;
+    let stepsPerFrame = 2;
+    let noiseLevel = 1.0;
+
+    // DOM Elements
+    const mainCanvas = document.getElementById('mainCanvas');
+    const mainCtx = mainCanvas.getContext('2d');
+    const lossCanvas = document.getElementById('lossCanvas');
+    const lossCtx = lossCanvas.getContext('2d');
+    const eqDisplay = document.getElementById('eqDisplay');
+    const statsDisplay = document.getElementById('statsDisplay');
+
+    // --- 1. Synthetic Data Generation ---
+    function generateData(n = 45) {
+      dataPoints = [];
+      // Class -1: Center around (3, 3)
+      // Class +1: Center around (7, 7)
+      for (let i = 0; i < n; i++) {
+        dataPoints.push({
+          x1: randNormal(3.0, noiseLevel),
+          x2: randNormal(3.0, noiseLevel),
+          y: -1
+        });
+        dataPoints.push({
+          x1: randNormal(7.0, noiseLevel),
+          x2: randNormal(7.0, noiseLevel),
+          y: +1
+        });
+      }
+    }
+
+    // Box-Muller Gaussian random generator
+    function randNormal(mean, std) {
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      const num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+      return num * std + mean;
+    }
+
+    // --- 2. SVM Math & Subgradient Descent ---
+
+    function decisionFunction(x1, x2) {
+      return weights.w1 * x1 + weights.w2 * x2 + weights.b;
+    }
+
+    function computeMetrics() {
+      const m = dataPoints.length;
+      if (m === 0) return { cost: 0, hingeLoss: 0, svCount: 0, acc: 0, margin: 0, normW: 0 };
+
+      let hingeSum = 0;
+      let svCount = 0;
+      let correctCount = 0;
+
+      for (let p of dataPoints) {
+        const fx = decisionFunction(p.x1, p.x2);
+        const s = p.y * fx;
+        const loss = Math.max(0, 1 - s);
+        hingeSum += loss;
+        if (s <= 1.02) svCount++;
+        if (s > 0) correctCount++;
+      }
+
+      const normW2 = weights.w1 * weights.w1 + weights.w2 * weights.w2;
+      const normW = Math.sqrt(normW2);
+      const hingeLoss = hingeSum / m;
+      const cost = 0.5 * normW2 + C * hingeLoss;
+      const margin = normW > 1e-5 ? (2 / normW) : 0;
+      const acc = (correctCount / m) * 100;
+
+      return { cost, hingeLoss, svCount, acc, margin, normW };
+    }
+
+    function trainStep() {
+      const m = dataPoints.length;
+      if (m === 0) return;
+
+      // L2 Regularization term gradient: d(0.5 * ||w||^2) / dw = w
+      let dw1 = weights.w1;
+      let dw2 = weights.w2;
+      let db = 0;
+
+      for (let p of dataPoints) {
+        const fx = decisionFunction(p.x1, p.x2);
+        const s = p.y * fx;
+
+        // Subgradient of Hinge Loss: active when margin constraint is violated (s < 1)
+        if (s < 1.0) {
+          dw1 += (C / m) * (-p.y * p.x1);
+          dw2 += (C / m) * (-p.y * p.x2);
+          db += (C / m) * (-p.y);
+        }
+      }
+
+      // Update weights: Gradient Descent
+      weights.w1 -= learningRate * dw1;
+      weights.w2 -= learningRate * dw2;
+      weights.b -= learningRate * db;
+
+      epoch++;
+      const metrics = computeMetrics();
+      lossHistory.push(metrics.cost);
+      if (lossHistory.length > 500) lossHistory.shift();
+    }
+
+    // --- 3. Visualization ---
+
+    function toScreen(x, y) {
+      return {
+        x: (x / 10) * mainCanvas.width,
+        y: mainCanvas.height - (y / 10) * mainCanvas.height
+      };
+    }
+
+    // Helper to get intersection of w1*x1 + w2*x2 + b = targetVal across screen boundaries
+    function getLineEndpoints(targetVal) {
+      const w1 = weights.w1;
+      const w2 = weights.w2;
+      const b = weights.b - targetVal;
+
+      if (Math.abs(w2) >= Math.abs(w1)) {
+        // Solve for x2 at x1 = 0 and x1 = 10
+        const y0 = -(w1 * 0 + b) / w2;
+        const y10 = -(w1 * 10 + b) / w2;
+        return [toScreen(0, y0), toScreen(10, y10)];
+      } else {
+        // Solve for x1 at x2 = 0 and x2 = 10
+        const x0 = -(w2 * 0 + b) / w1;
+        const x10 = -(w2 * 10 + b) / w1;
+        return [toScreen(x0, 0), toScreen(x10, 10)];
+      }
+    }
+
+    function renderMain() {
+      mainCtx.fillStyle = '#071019';
+      mainCtx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+      // Draw Coordinate Grid
+      mainCtx.strokeStyle = '#141e2b';
+      mainCtx.lineWidth = 1;
+      mainCtx.beginPath();
+      for (let i = 0; i <= 10; i++) {
+        const p1 = toScreen(i, 0); const p2 = toScreen(i, 10);
+        mainCtx.moveTo(p1.x, p1.y); mainCtx.lineTo(p2.x, p2.y);
+        const p3 = toScreen(0, i); const p4 = toScreen(10, i);
+        mainCtx.moveTo(p3.x, p3.y); mainCtx.lineTo(p4.x, p4.y);
+      }
+      mainCtx.stroke();
+
+      const normW = Math.sqrt(weights.w1 * weights.w1 + weights.w2 * weights.w2);
+
+      // Draw Margin Street Band if weights are meaningful
+      if (normW > 1e-4) {
+        const posLine = getLineEndpoints(1.0);
+        const negLine = getLineEndpoints(-1.0);
+
+        mainCtx.save();
+        mainCtx.beginPath();
+        mainCtx.moveTo(posLine[0].x, posLine[0].y);
+        mainCtx.lineTo(posLine[1].x, posLine[1].y);
+        mainCtx.lineTo(negLine[1].x, negLine[1].y);
+        mainCtx.lineTo(negLine[0].x, negLine[0].y);
+        mainCtx.closePath();
+        mainCtx.fillStyle = CONFIG.colors.marginBand;
+        mainCtx.fill();
+        mainCtx.restore();
+
+        // Positive Margin (+1 Line)
+        mainCtx.save();
+        mainCtx.strokeStyle = CONFIG.colors.posMargin;
+        mainCtx.lineWidth = 1.5;
+        mainCtx.setLineDash([6, 5]);
+        mainCtx.beginPath();
+        mainCtx.moveTo(posLine[0].x, posLine[0].y);
+        mainCtx.lineTo(posLine[1].x, posLine[1].y);
+        mainCtx.stroke();
+        mainCtx.restore();
+
+        // Negative Margin (-1 Line)
+        mainCtx.save();
+        mainCtx.strokeStyle = CONFIG.colors.negMargin;
+        mainCtx.lineWidth = 1.5;
+        mainCtx.setLineDash([6, 5]);
+        mainCtx.beginPath();
+        mainCtx.moveTo(negLine[0].x, negLine[0].y);
+        mainCtx.lineTo(negLine[1].x, negLine[1].y);
+        mainCtx.stroke();
+        mainCtx.restore();
+
+        // Hyperplane (Decision Boundary: 0 Line)
+        const midLine = getLineEndpoints(0.0);
+        mainCtx.save();
+        mainCtx.strokeStyle = CONFIG.colors.hyperplane;
+        mainCtx.lineWidth = 2.5;
+        mainCtx.beginPath();
+        mainCtx.moveTo(midLine[0].x, midLine[0].y);
+        mainCtx.lineTo(midLine[1].x, midLine[1].y);
+        mainCtx.stroke();
+        mainCtx.restore();
+      }
+
+      // Draw Data Points and Support Vector Highlights
+      for (let p of dataPoints) {
+        const pos = toScreen(p.x1, p.x2);
+        const fx = decisionFunction(p.x1, p.x2);
+        const marginScore = p.y * fx;
+        const isSV = marginScore <= 1.02;
+
+        // Glowing halo for Support Vectors
+        if (isSV) {
+          mainCtx.save();
+          mainCtx.beginPath();
+          mainCtx.arc(pos.x, pos.y, CONFIG.pointRadius + 4.5, 0, Math.PI * 2);
+          mainCtx.strokeStyle = CONFIG.colors.svRing;
+          mainCtx.lineWidth = 2.0;
+          mainCtx.stroke();
+
+          // Outer faint halo
+          mainCtx.beginPath();
+          mainCtx.arc(pos.x, pos.y, CONFIG.pointRadius + 7.5, 0, Math.PI * 2);
+          mainCtx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+          mainCtx.lineWidth = 1.0;
+          mainCtx.stroke();
+          mainCtx.restore();
+        }
+
+        // Point Body
+        mainCtx.beginPath();
+        mainCtx.arc(pos.x, pos.y, CONFIG.pointRadius, 0, Math.PI * 2);
+        mainCtx.fillStyle = p.y === 1 ? CONFIG.colors.classPos : CONFIG.colors.classNeg;
+        mainCtx.fill();
+        mainCtx.strokeStyle = '#071019';
+        mainCtx.lineWidth = 1;
+        mainCtx.stroke();
+      }
+    }
+
+    function renderLoss() {
+      lossCtx.fillStyle = '#0a1320';
+      lossCtx.fillRect(0, 0, lossCanvas.width, lossCanvas.height);
+
+      if (lossHistory.length < 2) return;
+
+      lossCtx.beginPath();
+      lossCtx.strokeStyle = CONFIG.colors.lossLine;
+      lossCtx.lineWidth = 2;
+
+      const maxLoss = Math.max(...lossHistory, 1.0);
+      const w = lossCanvas.width;
+      const h = lossCanvas.height;
+      const padding = 20;
+
+      for (let i = 0; i < lossHistory.length; i++) {
+        const val = lossHistory[i];
+        const x = padding + (i / (lossHistory.length - 1)) * (w - 2 * padding);
+        const y = h - padding - (val / maxLoss) * (h - 2 * padding);
+        if (i === 0) lossCtx.moveTo(x, y);
+        else lossCtx.lineTo(x, y);
+      }
+      lossCtx.stroke();
+
+      // Baseline zero
+      lossCtx.strokeStyle = '#223247';
+      lossCtx.lineWidth = 1;
+      lossCtx.beginPath();
+      lossCtx.moveTo(padding, h - padding);
+      lossCtx.lineTo(w - padding, h - padding);
+      lossCtx.stroke();
+    }
+
+    function updateStats() {
+      const m = computeMetrics();
+
+      eqDisplay.innerHTML =
+        `J(w, b) = 0.5·||w||² + C·Hinge = <b>${m.cost.toFixed(4)}</b>  (Hinge: ${m.hingeLoss.toFixed(4)})`;
+
+      statsDisplay.textContent =
+        `Epoch       : ${epoch}\n` +
+        `Cost J(w,b) : ${m.cost.toFixed(5)}\n` +
+        `Hinge Loss  : ${m.hingeLoss.toFixed(5)}\n` +
+        `Margin (2/W): ${m.margin.toFixed(3)}\n` +
+        `Support Vec : ${m.svCount} / ${dataPoints.length} (${((m.svCount / Math.max(1, dataPoints.length)) * 100).toFixed(1)}%)\n` +
+        `Accuracy    : ${m.acc.toFixed(1)}%\n` +
+        `Weights     :\n` +
+        `  w1 = ${weights.w1.toFixed(3)},  w2 = ${weights.w2.toFixed(3)}\n` +
+        `  b  = ${weights.b.toFixed(3)}\n` +
+        `  ||w|| = ${m.normW.toFixed(3)}`;
+    }
+
+    // --- 4. Loop & Events ---
+
+    function loop() {
+      if (isLearning) {
+        for (let k = 0; k < stepsPerFrame; k++) {
+          trainStep();
+        }
+      }
+      renderMain();
+      renderLoss();
+      updateStats();
+      requestAnimationFrame(loop);
+    }
+
+    function resetWeights() {
+      // Start near zero with small perturbation
+      weights = {
+        w1: (Math.random() - 0.5) * 0.2,
+        w2: (Math.random() - 0.5) * 0.2,
+        b: (Math.random() - 0.5) * 0.4
+      };
+      lossHistory = [];
+      epoch = 0;
+    }
+
+    function init() {
+      resetWeights();
+      generateData();
+      loop();
+    }
+
+    // Button Events
+    document.getElementById('toggleBtn').addEventListener('click', (e) => {
+      isLearning = !isLearning;
+      e.target.textContent = isLearning ? "정지" : "재개";
+      e.target.classList.toggle('primary');
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      resetWeights();
+      isLearning = false;
+      document.getElementById('toggleBtn').textContent = "시작";
+      document.getElementById('toggleBtn').classList.add('primary');
+    });
+
+    document.getElementById('newDataBtn').addEventListener('click', () => {
+      generateData();
+      resetWeights();
+      isLearning = false;
+      document.getElementById('toggleBtn').textContent = "시작";
+      document.getElementById('toggleBtn').classList.add('primary');
+    });
+
+    // Slider Events
+    document.getElementById('lrRange').addEventListener('input', (e) => {
+      learningRate = parseFloat(e.target.value);
+      document.getElementById('lrVal').textContent = learningRate.toFixed(3);
+    });
+    document.getElementById('cRange').addEventListener('input', (e) => {
+      C = parseFloat(e.target.value);
+      document.getElementById('cVal').textContent = C.toFixed(1);
+    });
+    document.getElementById('speedRange').addEventListener('input', (e) => {
+      stepsPerFrame = parseInt(e.target.value);
+      document.getElementById('speedVal').textContent = stepsPerFrame;
+    });
+    document.getElementById('noiseRange').addEventListener('input', (e) => {
+      noiseLevel = parseFloat(e.target.value);
+      document.getElementById('noiseVal').textContent = noiseLevel.toFixed(1);
+      generateData();
+      resetWeights();
+    });
+
+    // Boot
+    init();
+  </script>
+</body>
+
+</html>
