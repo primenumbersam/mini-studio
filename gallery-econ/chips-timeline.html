@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Infrastructure Bubble Burst & Contagion Timeline</title>
+
+  <!-- UnoCSS Runtime CDN & Reset -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css">
+  <script>
+    window.__unocss = {
+      theme: {
+        colors: {
+          paper: {
+            bg: 'var(--paper-bg)',
+            card: 'var(--paper-card)',
+            fg: 'var(--paper-fg)',
+            muted: 'var(--paper-muted)',
+            border: 'var(--paper-border)',
+            borderDark: 'var(--paper-border-dark)',
+            accent: '#ef4444',
+            blue: '#38bdf8',
+            amber: '#f59e0b',
+            emerald: '#10b981'
+          }
+        },
+        fontFamily: {
+          sans: "'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+
+  <!-- Google Fonts: Noto Sans KR & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap"
+    rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- KaTeX for LaTeX Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
+  <style>
+    :root {
+      --paper-bg: #fbfbf9;
+      --paper-card: #ffffff;
+      --paper-fg: #1c1c1a;
+      --paper-muted: #666664;
+      --paper-border: #e5e4df;
+      --paper-border-dark: #1c1c1a;
+      --grid-line: rgba(0, 0, 0, 0.035);
+      color-scheme: light;
+    }
+
+    html.dark {
+      --paper-bg: #131312;
+      --paper-card: #1c1c1a;
+      --paper-fg: #f4f4f0;
+      --paper-muted: #9c9b95;
+      --paper-border: #2c2c28;
+      --paper-border-dark: #f4f4f0;
+      --grid-line: rgba(255, 255, 255, 0.04);
+      color-scheme: dark;
+    }
+
+    body {
+      background-color: var(--paper-bg);
+      color: var(--paper-fg);
+      font-family: 'Noto Sans KR', sans-serif;
+      letter-spacing: -0.012em;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .font-mono-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Swiss Line Art Accents */
+    .swiss-border {
+      border: 1px solid var(--paper-border);
+    }
+
+    .swiss-border-bold {
+      border: 2px solid var(--paper-border-dark);
+    }
+
+    .swiss-border-b {
+      border-bottom: 1px solid var(--paper-border);
+    }
+
+    /* Subtle grid pattern */
+    .bg-grid-paper {
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* Timeline connector line */
+    .timeline-stem {
+      position: absolute;
+      top: 40px;
+      bottom: -40px;
+      left: 23px;
+      width: 2px;
+      background: var(--paper-border);
+      z-index: 0;
+    }
+
+    .timeline-node-active .timeline-stem {
+      background: var(--paper-border-dark);
+    }
+
+    /* Accordion transition */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+    }
+
+    .accordion-content.open {
+      max-height: 2000px;
+      transition: max-height 0.4s ease-in-out;
+    }
+
+    /* Dark mode accent callout adjustments */
+    html.dark .bg-amber-50\/60 {
+      background-color: rgba(120, 53, 15, 0.25) !important;
+      color: #fde68a !important;
+      border-color: rgba(217, 119, 6, 0.4) !important;
+    }
+    html.dark .bg-red-50\/60 {
+      background-color: rgba(127, 29, 29, 0.3) !important;
+      color: #fca5a5 !important;
+      border-color: rgba(239, 68, 68, 0.4) !important;
+    }
+    html.dark .bg-blue-50\/60 {
+      background-color: rgba(30, 58, 138, 0.3) !important;
+      color: #93c5fd !important;
+      border-color: rgba(59, 130, 246, 0.4) !important;
+    }
+    html.dark .bg-amber-50\/30 {
+      background-color: rgba(120, 53, 15, 0.2) !important;
+    }
+    html.dark .bg-red-50\/30 {
+      background-color: rgba(127, 29, 29, 0.2) !important;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-grid-paper selection:bg-red-100 selection:text-red-900">
+
+  <!-- Editorial Top Bar -->
+  <header class="border-b border-paper-border bg-paper-bg/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-mono font-bold px-2 py-0.5 bg-paper-fg text-paper-bg rounded-none">
+          TIMELINE REPORT
+        </span>
+        <span class="text-xs font-mono text-paper-muted hidden sm:inline">
+          3-Step Financial Contagion Mechanism
+        </span>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs font-mono text-paper-muted">
+        <span class="hidden md:inline">Time Lag: <strong class="text-paper-fg font-mono-num font-semibold">Minimum 12
+            Months</strong></span>
+        <button id="btnThemeToggle"
+          class="border border-paper-border hover:border-paper-fg px-2.5 py-1 rounded text-paper-fg text-[11px] transition-colors inline-flex items-center gap-1.5 cursor-pointer font-mono"
+          aria-label="Toggle theme">
+          <i data-lucide="moon" id="themeIcon" class="w-3.5 h-3.5"></i>
+          <span id="themeText">Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Header Section -->
+  <section class="max-w-5xl mx-auto px-4 pt-12 pb-8 w-full">
+    <div class="border-b-2 border-paper-fg pb-8">
+      <div class="flex flex-wrap items-center gap-2 mb-3 text-xs font-mono text-paper-muted uppercase tracking-wider">
+        <span>Structural Inflation (2026)</span>
+        <span>•</span>
+        <span class="text-paper-accent font-semibold">Fed Put Myth Decoupling</span>
+      </div>
+
+      <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-paper-fg leading-tight mb-4">
+        AI 인프라 주가 및 사모신용 거품 붕괴의 단계와 시간차
+      </h1>
+
+      <p class="text-base sm:text-lg text-paper-muted leading-relaxed max-w-3xl">
+        각 붕괴 단계 사이에는 회계적 지연(Accounting Lag)에 따른 완만한 잠복기와 마진콜이 촉발하는 수직적 붕괴 구간이 존재한다.
+        역사적 사례(2000년 닷컴·통신채, 2008년 글로벌 금융위기, 2020년 국채 발작)를 기반으로 전체 경로를 3단계로 추론한다.
+      </p>
+
+      <!-- Key Insight Callout Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-paper-border font-mono text-xs">
+        <div class="bg-paper-card p-4 border border-paper-border">
+          <div class="text-paper-muted mb-1">NODE 1 $\rightarrow$ NODE 2</div>
+          <div class="font-bold text-sm text-paper-fg font-mono-num mb-1">3~6개월 (1~2분기)</div>
+          <p class="text-[11px] text-paper-muted leading-normal">
+            주가 밸류에이션 수축 후 AI 스타트업 현금 소진(Cash Burn) 및 순환금융 중단 시차
+          </p>
+        </div>
+
+        <div class="bg-paper-card p-4 border border-paper-border">
+          <div class="text-paper-muted mb-1">NODE 2 $\rightarrow$ NODE 3</div>
+          <div class="font-bold text-sm text-paper-accent font-mono-num mb-1">6~9개월 (2~3분기)</div>
+          <p class="text-[11px] text-paper-muted leading-normal">
+            사모신용 내부모델(Mark-to-Model)과 환매 중단(Gating)으로 부실 은폐가 유지되는 잠복기
+          </p>
+        </div>
+
+        <div class="bg-paper-card p-4 border border-paper-border">
+          <div class="text-paper-muted mb-1">NODE 3 $\rightarrow$ NODE 4</div>
+          <div class="font-bold text-sm text-paper-blue font-mono-num mb-1">1~3주일 (긴급 대응)</div>
+          <p class="text-[11px] text-paper-muted leading-normal">
+            레포 단기자금시장 동결 시 연준의 상설레포기구(SRF) 및 선별적 유동성 긴급 수혈
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Horizontal Timeline Navigation Track -->
+  <section
+    class="max-w-5xl mx-auto px-4 mb-8 w-full sticky top-[49px] z-30 bg-paper-bg/95 py-3 border-b border-paper-border backdrop-blur-sm">
+    <div class="flex items-center justify-between gap-1 overflow-x-auto pb-1 text-xs font-mono">
+      <button onclick="scrollToNode('node-1')"
+        class="timeline-tab px-3 py-1.5 border border-paper-border hover:border-paper-fg rounded bg-paper-card whitespace-nowrap transition-all flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-paper-fg"></span>
+        <span class="font-bold">N1: 빅테크 쇼크</span>
+        <span class="text-paper-muted text-[10px]">T+0</span>
+      </button>
+
+      <span class="text-paper-muted text-[11px] hidden sm:inline">→ 3~6M →</span>
+
+      <button onclick="scrollToNode('node-2')"
+        class="timeline-tab px-3 py-1.5 border border-paper-border hover:border-paper-fg rounded bg-paper-card whitespace-nowrap transition-all flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-paper-amber"></span>
+        <span class="font-bold">N2: 사모신용 부실</span>
+        <span class="text-paper-muted text-[10px]">+3~6M</span>
+      </button>
+
+      <span class="text-paper-muted text-[11px] hidden sm:inline">→ 6~9M →</span>
+
+      <button onclick="scrollToNode('node-3')"
+        class="timeline-tab px-3 py-1.5 border border-paper-border hover:border-paper-fg rounded bg-paper-card whitespace-nowrap transition-all flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-paper-accent"></span>
+        <span class="font-bold">N3: 은행 마진콜</span>
+        <span class="text-paper-muted text-[10px]">+9~15M</span>
+      </button>
+
+      <span class="text-paper-muted text-[11px] hidden sm:inline">→ 1~3W →</span>
+
+      <button onclick="scrollToNode('node-4')"
+        class="timeline-tab px-3 py-1.5 border border-paper-border hover:border-paper-fg rounded bg-paper-card whitespace-nowrap transition-all flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-paper-blue"></span>
+        <span class="font-bold">N4: 연준 긴급개입</span>
+        <span class="text-paper-muted text-[10px]">+10~16M</span>
+      </button>
+
+      <span class="text-paper-muted text-[11px] hidden sm:inline">→ Long-term →</span>
+
+    </div>
+  </section>
+
+  <!-- Detailed Timeline Flow -->
+  <main class="max-w-5xl mx-auto px-4 py-4 w-full flex-1">
+    <div class="space-y-12">
+
+      <!-- NODE 1 -->
+      <article id="node-1" class="relative pl-12 sm:pl-16">
+        <div class="timeline-stem"></div>
+        <div
+          class="absolute left-0 top-0 w-12 h-12 rounded-full border-2 border-paper-fg bg-paper-card flex items-center justify-center font-mono font-bold text-sm shadow-sm z-10">
+          01
+        </div>
+
+        <div class="bg-paper-card border border-paper-border p-6 shadow-sm">
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-border pb-3 mb-4">
+            <div>
+              <span class="text-[11px] font-mono text-paper-muted uppercase">Starting Trigger • Phase 1</span>
+              <h2 class="text-lg sm:text-xl font-bold text-paper-fg tracking-tight">
+                빅테크 실적 쇼크 및 기술주 밸류에이션 급락
+              </h2>
+            </div>
+            <div
+              class="text-xs font-mono bg-paper-bg px-2.5 py-1 rounded border border-paper-border self-start sm:self-auto">
+              기준 시점: T + 0
+            </div>
+          </div>
+
+          <p class="text-sm text-paper-fg leading-relaxed mb-4">
+            고금리·고물가 환경 속에서 MSFT(Microsoft), AMZN(Amazon), GOOG(Alphabet) 등 클라우드 하이퍼스케일러와 NVDA(NVIDIA)의 분기 실적 발표를 통해
+            설비투자(CapEx) 대비 수익화 부재가 숫자로 증명되는 순간이다. 기업 고객들의 클라우드 비용 최적화(FinOps) 압박으로 AI 소프트웨어 매출 성장률이 둔화되고,
+            서버 내용연수 연장으로 방어하던 감가상각비 부담이 잉여현금흐름(FCF) 감소로 직결되면서 주가 가치평가배수(Valuation Multiples)가 급격히 수축한다.
+          </p>
+
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono bg-paper-bg p-3 border border-paper-border">
+            <div>
+              <span class="text-paper-muted block mb-0.5">핵심 징후 (Indicators):</span>
+              <ul class="list-disc list-inside text-paper-fg space-y-0.5">
+                <li>하이퍼스케일러 CapEx 대비 AI ARR 전환율 급락</li>
+                <li>기업 FinOps 예산 삭감 및 클라우드 지출 동결</li>
+                <li>서버 감가상각 기간 연장 착시의 만료</li>
+              </ul>
+            </div>
+            <div>
+              <span class="text-paper-muted block mb-0.5">파급 경로 (Transmission):</span>
+              <p class="text-paper-fg leading-normal">
+                주식 시장 정점 확인 $\rightarrow$ 빅테크 현금흐름 방어 모드 전환 $\rightarrow$ 비상장 AI 스타트업 추가 출자 중단
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- NODE 1 -> 2 LAG GAUGE -->
+      <div class="relative pl-12 sm:pl-16 py-2">
+        <div class="timeline-stem"></div>
+        <div
+          class="bg-amber-50/60 border border-amber-200/80 p-3 text-xs font-mono flex items-center justify-between text-amber-900">
+          <div class="flex items-center gap-2">
+            <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+            <span><strong>회계적 지연 1:</strong> 빅테크 주가 폭락 $\rightarrow$ 사모신용 펀드 실제 디폴트 표면화</span>
+          </div>
+          <span class="font-bold text-amber-700 font-mono-num">소요 기간: 약 3개월 ~ 6개월 (1~2분기)</span>
+        </div>
+      </div>
+
+      <!-- NODE 2 -->
+      <article id="node-2" class="relative pl-12 sm:pl-16">
+        <div class="timeline-stem"></div>
+        <div
+          class="absolute left-0 top-0 w-12 h-12 rounded-full border-2 border-paper-amber bg-paper-card flex items-center justify-center font-mono font-bold text-sm text-paper-amber shadow-sm z-10">
+          02
+        </div>
+
+        <div class="bg-paper-card border border-paper-border p-6 shadow-sm">
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-border pb-3 mb-4">
+            <div>
+              <span class="text-[11px] font-mono text-paper-amber uppercase font-semibold">Cascade Step 2</span>
+              <h2 class="text-lg sm:text-xl font-bold text-paper-fg tracking-tight">
+                AI 순환금융 중단 및 사모신용(Private Credit) 부실 표면화
+              </h2>
+            </div>
+            <div
+              class="text-xs font-mono bg-paper-bg px-2.5 py-1 rounded border border-paper-border self-start sm:self-auto">
+              경과 시점: T + 3 ~ 6 개월
+            </div>
+          </div>
+
+          <p class="text-sm text-paper-fg leading-relaxed mb-4">
+            빅테크는 현금흐름 방어를 위해 OpenAI, Anthropic 등 비상장 AI 기업에 대한 추가 지분 투자와 클라우드 크레딧 제공을 즉각 중단한다.
+            상업용 잔여이행의무(RPO) 증가세가 꺾이고, GPU를 담보로 사모신용 펀드에서 고금리 대출을 끌어다 쓴 네오클라우드 및 스타트업들이 이자 지급 불능에 빠진다.
+            스타트업들의 현금 소진(Cash Burn) 버퍼로 인해 실제 디폴트가 수면 위로 올라오기까지 최소 1~2분기의 지연이 발생한다.
+          </p>
+
+          <!-- Historical Precedent Box -->
+          <div class="border-l-2 border-paper-amber pl-3 py-1 bg-amber-50/30 text-xs my-4">
+            <span class="font-mono font-bold text-amber-900 block mb-1">역사적 유사 국면: 2000년 닷컴 & 텔레콤 회사채 위기</span>
+            <p class="text-paper-muted leading-relaxed">
+              2000년 3월 나스닥 폭락 당시 루슨트(Lucent), 노텔(Nortel) 등 통신장비 업체들이 신생 통신사(CLEC)에 장비 구매 자금을 빌려주던
+              <strong>벤더 파이낸싱(Vendor Financing, 현재 AI 순환금융과 동일)</strong>이 실제 디폴트와 대규모 대손상각으로 이어진 것은 약 6개월 뒤인 2000년
+              하반기였다.
+            </p>
+          </div>
+
+          <div class="text-xs font-mono bg-paper-bg p-3 border border-paper-border">
+            <span class="text-paper-muted block mb-0.5">핵심 붕괴 매커니즘:</span>
+            <p class="text-paper-fg leading-normal">
+              클라우드 크레딧 지원 종료 $\rightarrow$ RPO(잔여이행의무) 급감 $\rightarrow$ GPU 담보 사모대출 이자 미납 $\rightarrow$ 네오클라우드 디폴트
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- NODE 2 -> 3 LAG GAUGE -->
+      <div class="relative pl-12 sm:pl-16 py-2">
+        <div class="timeline-stem"></div>
+        <div
+          class="bg-red-50/60 border border-red-200/80 p-3 text-xs font-mono flex items-center justify-between text-red-900">
+          <div class="flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-paper-accent"></i>
+            <span><strong>회계적 지연 2:</strong> 사모신용 펀드 부실 $\rightarrow$ 대형 시중 은행 자본 훼손 및 레포 위기</span>
+          </div>
+          <span class="font-bold text-paper-accent font-mono-num">소요 기간: 약 6개월 ~ 9개월 (최대 잠복기)</span>
+        </div>
+      </div>
+
+      <!-- NODE 3 -->
+      <article id="node-3" class="relative pl-12 sm:pl-16">
+        <div class="timeline-stem"></div>
+        <div
+          class="absolute left-0 top-0 w-12 h-12 rounded-full border-2 border-paper-accent bg-paper-card flex items-center justify-center font-mono font-bold text-sm text-paper-accent shadow-sm z-10">
+          03
+        </div>
+
+        <div class="bg-paper-card border border-paper-border p-6 shadow-sm">
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-border pb-3 mb-4">
+            <div>
+              <span class="text-[11px] font-mono text-paper-accent uppercase font-semibold">Critical Transition • Phase
+                3</span>
+              <h2 class="text-lg sm:text-xl font-bold text-paper-fg tracking-tight">
+                대형 시중 은행 자본 훼손 및 레포(Repo) 담보 위기 전이
+              </h2>
+            </div>
+            <div
+              class="text-xs font-mono bg-paper-bg px-2.5 py-1 rounded border border-paper-border self-start sm:self-auto">
+              경과 시점: T + 9 ~ 15 개월
+            </div>
+          </div>
+
+          <p class="text-sm text-paper-fg leading-relaxed mb-4">
+            사모신용 시장은 일일 시가평가(Mark-to-Market)를 하지 않고 분기별 내부 모델 평가(Mark-to-Model)를 적용한다.
+            현물지급이자(PIK) 방식으로 이자를 원금에 얹어주며 2~3분기 동안 부도율을 장부상 숨길 수 있다.
+            그러나 분기별 환매 요청이 집중되어 사모펀드가 환매 중단(Gating)을 선언하고, 사모펀드에 순자산가치 담보 대출(NAV Loans)을 제공한
+            JPMorgan, Bank of America 등 대형 은행이 마진콜을 통보하면서 잠복기가 폭발적으로 종결된다.
+          </p>
+
+          <!-- Mechanism Breakdown: Mark-to-Model vs Mark-to-Market -->
+          <div class="bg-paper-bg p-4 border border-paper-border mb-4 text-xs font-mono">
+            <div class="font-bold text-paper-fg mb-2">사모신용 은폐 구조가 6~9개월 지속되는 이유:</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="border-t border-paper-border pt-2">
+                <span class="text-paper-muted block">1. PIK (Payment-in-Kind) 착시</span>
+                <p class="text-paper-fg mt-1">현금 이자를 못 내도 원금에 가산하여 장부상 정상 대출로 회계 처리</p>
+              </div>
+              <div class="border-t border-paper-border pt-2">
+                <span class="text-paper-muted block">2. 비유동성 환매 주기 (Gating)</span>
+                <p class="text-paper-fg mt-1">분기별 환매 제한으로 기관 자금 인출이 은행 마진콜로 전이되기까지 2~3분기 소요</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-l-2 border-paper-accent pl-3 py-1 bg-red-50/30 text-xs">
+            <span class="font-mono font-bold text-red-900 block mb-1">역사적 유사 국면: 2007~2008년 글로벌 금융위기</span>
+            <p class="text-paper-muted leading-relaxed">
+              2007년 6월 베어스턴스 산하 서브프라임 헤지펀드 파산 이후, 시중 은행들의 자산유동화증권 손실이 표면화되어
+              2008년 3월 베어스턴스 본사가 파산 위기에 몰리기까지 정확히 <strong>9개월</strong>이 걸렸다.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- NODE 3 -> 4 LAG GAUGE -->
+      <div class="relative pl-12 sm:pl-16 py-2">
+        <div class="timeline-stem"></div>
+        <div
+          class="bg-blue-50/60 border border-blue-200/80 p-3 text-xs font-mono flex items-center justify-between text-blue-900">
+          <div class="flex items-center gap-2">
+            <i data-lucide="zap" class="w-4 h-4 text-paper-blue"></i>
+            <span><strong>회계적 지연 3:</strong> 은행 담보 위기 & 레포 시장 마비 $\rightarrow$ 연준 긴급 개입</span>
+          </div>
+          <span class="font-bold text-paper-blue font-mono-num">소요 기간: 불과 1주일 ~ 3주일 (즉각적 발작)</span>
+        </div>
+      </div>
+
+      <!-- NODE 4 -->
+      <article id="node-4" class="relative pl-12 sm:pl-16">
+        <div class="timeline-stem"></div>
+        <div
+          class="absolute left-0 top-0 w-12 h-12 rounded-full border-2 border-paper-blue bg-paper-card flex items-center justify-center font-mono font-bold text-sm text-paper-blue shadow-sm z-10">
+          04
+        </div>
+
+        <div class="bg-paper-card border border-paper-border p-6 shadow-sm">
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-border pb-3 mb-4">
+            <div>
+              <span class="text-[11px] font-mono text-paper-blue uppercase font-semibold">Intervention • Phase 4</span>
+              <h2 class="text-lg sm:text-xl font-bold text-paper-fg tracking-tight">
+                단기 자금시장 동결 및 연방준비제도(Fed)의 선별적 유동성 공급
+              </h2>
+            </div>
+            <div
+              class="text-xs font-mono bg-paper-bg px-2.5 py-1 rounded border border-paper-border self-start sm:self-auto">
+              경과 시점: T + 10 ~ 16 개월
+            </div>
+          </div>
+
+          <p class="text-sm text-paper-fg leading-relaxed mb-4">
+            금융 시스템의 심장인 레포(Repo) 시장에서 현금 대출이 잠기고 담보 인정 비율(Haircut)이 급등하면 연준은 지체 없이 개입한다.
+            케빈 워시(Kevin Warsh) 의장은 상설레포기구(Standing Repo Facility, SRF) 한도 확대와 재할인창구 완화를 통해 시중 은행에
+            국채 담보부 유동성을 긴급 수혈한다. 은행권의 지급불능 방화벽은 세워지지만, 이 유동성은 주식 시장으로 흘러가지 않는다.
+          </p>
+
+          <div
+            class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono bg-paper-bg p-3 border border-paper-border mb-4">
+            <div>
+              <span class="text-paper-muted block">2008년 3월:</span>
+              <p class="text-paper-fg mt-0.5">베어스턴스 차환 거부 $\rightarrow$ PDCF 신설까지 <strong>1주일</strong></p>
+            </div>
+            <div>
+              <span class="text-paper-muted block">2020년 3월:</span>
+              <p class="text-paper-fg mt-0.5">국채 베이시스 청산 발작 $\rightarrow$ 무제한 유동성 투입 <strong>10일</strong></p>
+            </div>
+            <div>
+              <span class="text-paper-muted block">2023년 3월:</span>
+              <p class="text-paper-fg mt-0.5">SVB 뱅크런 발발 $\rightarrow$ BTFP 프로그램 발표까지 <strong>단 3일</strong></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- NODE 5 -->
+      <article id="node-5" class="relative pl-12 sm:pl-16">
+        <div
+          class="absolute left-0 top-0 w-12 h-12 rounded-full border-2 border-paper-fg bg-paper-fg text-paper-bg flex items-center justify-center font-mono font-bold text-sm shadow-sm z-10">
+          Post
+        </div>
+
+        <div class="bg-paper-card border-2 border-paper-fg p-6 sm:p-8 shadow-md">
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-border pb-3 mb-6">
+            <div>
+              <span class="text-[11px] font-mono text-paper-accent uppercase font-bold">The Divergence</span>
+              <h2 class="text-xl sm:text-2xl font-black text-paper-fg tracking-tight">
+                V자 반등의 소멸 (스태그플레이션적 장기 침체)
+              </h2>
+            </div>
+            <div class="text-xs font-mono bg-paper-fg text-paper-bg px-2.5 py-1 font-bold self-start sm:self-auto">
+              소요 기간: 1~2년 장기 조정
+            </div>
+          </div>
+
+          <div class="space-y-4 text-sm text-paper-fg leading-relaxed">
+            <p>
+              연준의 선별적 개입 이후 주식 시장이 곧바로 V자 급반등했던 것은 지난 40년간의 구조적 저물가 환경(1980년대 볼커 이후 세계화·중국 저임금)에서만 성립했던 특수한 역사적 예외였다.
+              2020년 3월처럼 인플레이션이 0%대일 때에만 제로 금리와 무제한 양적완화(QE)가 가능했다.
+            </p>
+
+            <div class="bg-paper-bg p-4 border border-paper-border font-mono text-xs space-y-2">
+              <div class="font-bold text-paper-accent">2026년 매크로 구조의 3대 인플레이션 제약:</div>
+              <ul class="list-disc list-inside space-y-1 text-paper-fg">
+                <li>미중 무역 분절화 및 보호무역 관세 전가로 인한 원자재 가격 하방 경직성</li>
+                <li>중동 지정학 긴장 고조 및 에너지 공급망 불안정</li>
+                <li>공급망 재구축 비용과 방위비 급증에 따른 만성적 국채 발행(Term Premium 상승)</li>
+              </ul>
+            </div>
+
+            <p>
+              워시 의장이 민간 부채와 AI 인프라 부실을 구제하기 위해 무제한 본원통화를 방출하는 순간 기대 인플레이션과 장기 국채 금리가 폭등한다.
+              따라서 연준은 은행권 붕괴를 막는 담보부 대출 창구(SRF)만 열어둘 뿐, 빅테크의 과잉 설비투자 손실이나 AI 스타트업의 파산을 구제해 줄 수 없다.
+              2008년 베어스턴스 구제 이후 S&P 500이 12개월간 40% 추가 폭락했던 것처럼, 데드캣 바운스 이후 실물 디레버리징과 스태그플레이션적 침체(Stagflationary Slump)가
+              장기간 전개된다.
+            </p>
+          </div>
+
+          <!-- Comparative Summary Table -->
+          <div class="mt-6 pt-6 border-t border-paper-border overflow-x-auto">
+            <table class="w-full text-xs font-mono text-left">
+              <thead>
+                <tr class="border-b border-paper-fg text-paper-muted">
+                  <th class="py-2 pr-4 font-bold">비교 항목</th>
+                  <th class="py-2 pr-4 font-bold">과거 저물가 슈퍼사이클 (1980~2020)</th>
+                  <th class="py-2 font-bold text-paper-accent">2026년 AI 인프라 버블 붕괴 국면</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-paper-border text-paper-fg">
+                <tr>
+                  <td class="py-2.5 pr-4 font-semibold text-paper-muted">연준 정책 기조</td>
+                  <td class="py-2.5 pr-4">기준금리 0% 인하 + 무제한 QE + 회사채 매입</td>
+                  <td class="py-2.5 text-paper-accent font-semibold">선별적 담보 대출 (SRF) 한정, 고금리 유지</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-semibold text-paper-muted">인플레이션 제약</td>
+                  <td class="py-2.5 pr-4">0~1%대 저물가 (글로벌 공급망·저임금 수혜)</td>
+                  <td class="py-2.5 text-paper-accent">만성적 3~4% 상회 (탈세계화·원자재 경직)</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-semibold text-paper-muted">주식 시장 경로</td>
+                  <td class="py-2.5 pr-4">숏커버링 동반 V자 급반등 (Fed Put 작동)</td>
+                  <td class="py-2.5 text-paper-accent font-semibold">데드캣 바운스 후 장기 L자 디레버리징</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-semibold text-paper-muted">최종 귀결</td>
+                  <td class="py-2.5 pr-4">유동성 팽창에 따른 자산 인플레이션</td>
+                  <td class="py-2.5 text-paper-accent">순환금융 해체, 부실 기업 퇴출, 자본 재배치</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- Editorial Footer -->
+  <footer class="border-t border-paper-border py-8 mt-16 bg-paper-bg text-center text-xs text-paper-muted font-mono">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span>AI Infrastructure Bubble Burst Timeline Specification</span>
+      <span>100% Client-Side Computing • Zero-Build Architecture</span>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scrolling to node
+    function scrollToNode(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        const offset = 120;
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = el.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Light / Dark theme toggle
+    const themeBtn = document.getElementById('btnThemeToggle');
+    const themeText = document.getElementById('themeText');
+
+    function applyTheme(isDark) {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        if (themeText) themeText.textContent = 'Light';
+        if (themeBtn) {
+          const oldIcon = themeBtn.querySelector('[data-lucide], svg');
+          if (oldIcon) {
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', 'sun');
+            newIcon.className = 'w-3.5 h-3.5';
+            oldIcon.replaceWith(newIcon);
+          }
+        }
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (themeText) themeText.textContent = 'Dark';
+        if (themeBtn) {
+          const oldIcon = themeBtn.querySelector('[data-lucide], svg');
+          if (oldIcon) {
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', 'moon');
+            newIcon.className = 'w-3.5 h-3.5';
+            oldIcon.replaceWith(newIcon);
+          }
+        }
+      }
+      lucide.createIcons();
+    }
+
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+    applyTheme(initialDark);
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        const nextDark = !isDark;
+        applyTheme(nextDark);
+        localStorage.setItem('theme', nextDark ? 'dark' : 'light');
+      });
+    }
+
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

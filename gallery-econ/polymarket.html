@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- UnoCSS Runtime CDN & Reset -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #000000; }
+        .bar-transition { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center selection:bg-black selection:text-white">
+
+    <header class="w-full max-w-5xl mb-8 border-b-2 border-black pb-4 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-light tracking-widest uppercase">Zero-sum binary prediction game</h2>
+            <p class="text-xs text-gray-500 mt-2 uppercase tracking-widest">Rational Arbitrage MVP</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xs uppercase text-gray-400 mb-1">Available Balance</p>
+            <p class="text-2xl font-mono" id="balanceDisplay">$1,000.00</p>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Market Context & Education (PMF) -->
+        <section class="lg:col-span-7 flex flex-col gap-8">
+            <div class="border border-black p-6">
+                <span class="text-[10px] uppercase tracking-widest bg-black text-white px-2 py-1">Geopolitics</span>
+                <h3 class="text-xl mt-4 mb-6">US x Iran permanent peace deal by May 15, 2026?</h3>
+                <div class="flex gap-4">
+                    <button id="btnSelectYes" class="flex-1 py-3 border border-black hover:bg-black hover:text-white transition-colors flex justify-between px-4 items-center group">
+                        <span class="uppercase text-sm tracking-wider">Yes</span>
+                        <span class="font-mono text-lg">12¢</span>
+                    </button>
+                    <button id="btnSelectNo" class="flex-1 py-3 border border-black hover:bg-black hover:text-white transition-colors flex justify-between px-4 items-center group">
+                        <span class="uppercase text-sm tracking-wider">No</span>
+                        <span class="font-mono text-lg">88¢</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Probability Mass Function Visualization -->
+            <div class="border border-black p-6 relative flex-grow flex flex-col min-h-[450px]">
+                <div class="flex justify-between items-end mb-8 z-20">
+                    <h3 class="text-[10px] uppercase tracking-widest text-gray-400">Probability Mass Function (PMF)</h3>
+                    <span class="text-[10px] uppercase tracking-widest bg-gray-100 px-2 py-1" id="currentSelectionLabel">Selected: YES (12%)</span>
+                </div>
+                
+                <div class="relative flex-grow w-full mb-16" id="pmfContainer">
+                    <!-- X Axis (Horizontal Base Line) -->
+                    <div class="absolute bottom-0 w-full border-b border-black z-0"></div>
+
+                    <!-- Zero Axis (Vertical) -->
+                    <div class="absolute top-0 bottom-0 border-l border-dashed border-gray-400 z-0" style="left: 50%;"></div>
+                    <div class="absolute -bottom-6 text-[10px] font-mono text-gray-400 transform -translate-x-1/2" style="left: 50%;">$0</div>
+
+                    <!-- Loss Bar -->
+                    <div id="lossGroup" class="absolute bottom-0 flex flex-col items-center w-12 transform -translate-x-1/2 group cursor-help z-10 bar-transition" style="left: 40%; height: 88%;">
+                        <div class="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] p-2 w-48 text-center pointer-events-none z-20">
+                            <span id="tooltipLossProb" class="font-mono text-sm block mb-1">88%</span>
+                            Probability to lose your investment
+                        </div>
+                        <div class="w-6 h-full bg-gray-300 group-hover:bg-black transition-colors min-h-[2px]"></div>
+                    </div>
+
+                    <!-- Gain Bar -->
+                    <div id="gainGroup" class="absolute bottom-0 flex flex-col items-center w-12 transform -translate-x-1/2 group cursor-help z-10 bar-transition" style="left: 90%; height: 12%;">
+                        <div class="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] p-2 w-48 text-center pointer-events-none z-20">
+                            <span id="tooltipGainProb" class="font-mono text-sm block mb-1">12%</span>
+                            Probability to realize net profit
+                        </div>
+                        <div class="w-6 h-full border-2 border-black bg-white group-hover:bg-black group-hover:border-black transition-colors min-h-[2px]"></div>
+                    </div>
+
+                    <!-- Axis Labels (Dynamic Positioning) -->
+                    <div id="labelLossContainer" class="absolute text-center transform -translate-x-1/2 bar-transition w-32" style="left: 40%; top: 100%; margin-top: 1.5rem;">
+                        <p class="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Risk (Loss)</p>
+                        <p id="labelLossAmount" class="font-mono text-sm font-semibold">-$10.00</p>
+                    </div>
+                    <div id="labelGainContainer" class="absolute text-center transform -translate-x-1/2 bar-transition w-32" style="left: 90%; top: 100%; margin-top: 1.5rem;">
+                        <p class="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Reward (Net)</p>
+                        <p id="labelGainAmount" class="font-mono text-sm font-semibold">+$73.33</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Trading Interface & Portfolio -->
+        <section class="lg:col-span-5 flex flex-col gap-8">
+            
+            <!-- Order Form -->
+            <div class="border-2 border-black p-6 bg-gray-50">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-sm uppercase tracking-widest">Place Order</h3>
+                    <span id="orderSideBadge" class="text-[10px] uppercase tracking-widest bg-black text-white px-2 py-1">BUY YES</span>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">Amount (USD)</label>
+                    <div class="flex items-center border-b border-black pb-2">
+                        <span class="text-xl mr-2">$</span>
+                        <input type="number" id="inputAmount" value="10" class="w-full bg-transparent text-3xl font-mono focus:outline-none" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="space-y-3 mb-8">
+                    <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                        <span class="text-xs uppercase tracking-widest text-gray-500">Price</span>
+                        <span id="summaryPrice" class="font-mono">12¢</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                        <span class="text-xs uppercase tracking-widest text-gray-500">Shares (Quantity)</span>
+                        <span id="summaryShares" class="font-mono">83.33</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                        <span class="text-xs uppercase tracking-widest text-gray-500">Potential Net Profit</span>
+                        <span id="summaryNet" class="font-mono text-green-600">+$73.33</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <span class="text-xs uppercase tracking-widest font-semibold">Total Payout (To Win)</span>
+                        <span id="summaryTotal" class="font-mono text-lg font-semibold">$83.33</span>
+                    </div>
+                </div>
+
+                <button id="btnPlaceOrder" class="w-full bg-black text-white py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Confirm Order
+                </button>
+                <p id="errorMsg" class="text-red-600 text-[10px] uppercase tracking-widest text-center mt-2 h-4"></p>
+            </div>
+
+            <!-- Portfolio Section -->
+            <div class="border border-black p-6 flex-grow">
+                <h3 class="text-sm uppercase tracking-widest border-b border-black pb-4 mb-4">Open Positions</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-200 text-[10px] uppercase tracking-widest text-gray-500">
+                                <th class="pb-2 font-normal">Side</th>
+                                <th class="pb-2 font-normal">Shares</th>
+                                <th class="pb-2 font-normal text-right">Cost</th>
+                                <th class="pb-2 font-normal text-right">Payout</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolioBody">
+                            <!-- Empty State -->
+                            <tr id="emptyPortfolioRow">
+                                <td colspan="4" class="py-8 text-center text-xs text-gray-400 uppercase tracking-widest">No active positions</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="w-full max-w-5xl mt-12 pt-6 border-t border-black flex justify-between items-center text-[10px] uppercase tracking-widest text-gray-400">
+        <span>Math-Driven UI Architecture</span>
+        <span>Expectation: E[X] = 0</span>
+    </footer>
+
+    <script>
+        // State
+        let balance = 1000.00;
+        let selectedSide = 'YES'; // 'YES' or 'NO'
+        const marketPrices = { 'YES': 0.12, 'NO': 0.88 };
+        let positions = [];
+
+        // DOM Elements
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const btnSelectYes = document.getElementById('btnSelectYes');
+        const btnSelectNo = document.getElementById('btnSelectNo');
+        const currentSelectionLabel = document.getElementById('currentSelectionLabel');
+        const orderSideBadge = document.getElementById('orderSideBadge');
+        const inputAmount = document.getElementById('inputAmount');
+        const btnPlaceOrder = document.getElementById('btnPlaceOrder');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        // PMF Elements
+        const lossGroup = document.getElementById('lossGroup');
+        const gainGroup = document.getElementById('gainGroup');
+        const labelLossContainer = document.getElementById('labelLossContainer');
+        const labelGainContainer = document.getElementById('labelGainContainer');
+        const tooltipLossProb = document.getElementById('tooltipLossProb');
+        const tooltipGainProb = document.getElementById('tooltipGainProb');
+        const labelLossAmount = document.getElementById('labelLossAmount');
+        const labelGainAmount = document.getElementById('labelGainAmount');
+        
+        // Summary Elements
+        const summaryPrice = document.getElementById('summaryPrice');
+        const summaryShares = document.getElementById('summaryShares');
+        const summaryNet = document.getElementById('summaryNet');
+        const summaryTotal = document.getElementById('summaryTotal');
+        
+        // Portfolio Elements
+        const portfolioBody = document.getElementById('portfolioBody');
+        const emptyPortfolioRow = document.getElementById('emptyPortfolioRow');
+
+        // Functions
+        function formatCurrency(num) {
+            return '$' + num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function updateUI() {
+            const amount = parseFloat(inputAmount.value) || 0;
+            const price = marketPrices[selectedSide];
+            const probSuccess = price;
+            const probFail = 1 - price;
+            
+            const shares = amount / price;
+            const totalPayout = shares; // 1 share = $1 upon success
+            const netProfit = totalPayout - amount;
+
+            // Update Selection Styling
+            if(selectedSide === 'YES') {
+                btnSelectYes.classList.add('bg-black', 'text-white');
+                btnSelectNo.classList.remove('bg-black', 'text-white');
+            } else {
+                btnSelectNo.classList.add('bg-black', 'text-white');
+                btnSelectYes.classList.remove('bg-black', 'text-white');
+            }
+
+            // Update Labels
+            currentSelectionLabel.textContent = `Selected: ${selectedSide} (${(probSuccess * 100).toFixed(0)}%)`;
+            orderSideBadge.textContent = `BUY ${selectedSide}`;
+            
+            // Update Summary
+            summaryPrice.textContent = (price * 100).toFixed(0) + '¢';
+            summaryShares.textContent = shares.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            summaryNet.textContent = '+' + formatCurrency(netProfit);
+            summaryTotal.textContent = formatCurrency(totalPayout);
+
+            // Update PMF Bars & Tooltips (Proportional Scaling Logic)
+            // Determine the maximum absolute value to set the scale boundary
+            const maxVal = Math.max(amount, netProfit);
+            const safeMax = maxVal > 0 ? maxVal : 1;
+            
+            // The maximum value takes up 42% of the container width from the center.
+            // The smaller value is scaled linearly based on the exact ratio.
+            const lossPos = 50 - (amount / safeMax) * 42; 
+            const gainPos = 50 + (netProfit / safeMax) * 42;
+
+            // Apply X-axis positions
+            lossGroup.style.left = lossPos + '%';
+            gainGroup.style.left = gainPos + '%';
+            labelLossContainer.style.left = lossPos + '%';
+            labelGainContainer.style.left = gainPos + '%';
+
+            // Apply Y-axis heights (Probability)
+            lossGroup.style.height = (probFail * 100) + '%';
+            gainGroup.style.height = (probSuccess * 100) + '%';
+            
+            tooltipLossProb.textContent = (probFail * 100).toFixed(0) + '%';
+            tooltipGainProb.textContent = (probSuccess * 100).toFixed(0) + '%';
+            
+            labelLossAmount.textContent = '-' + formatCurrency(amount);
+            labelGainAmount.textContent = '+' + formatCurrency(netProfit);
+
+            // Validation
+            if (amount > balance) {
+                btnPlaceOrder.disabled = true;
+                errorMsg.textContent = "Insufficient balance";
+            } else if (amount <= 0) {
+                btnPlaceOrder.disabled = true;
+                errorMsg.textContent = "Enter a valid amount";
+            } else {
+                btnPlaceOrder.disabled = false;
+                errorMsg.textContent = "";
+            }
+        }
+
+        function renderPortfolio() {
+            balanceDisplay.textContent = formatCurrency(balance);
+            
+            if (positions.length === 0) {
+                emptyPortfolioRow.style.display = 'table-row';
+            } else {
+                emptyPortfolioRow.style.display = 'none';
+                
+                // Clear existing rows except the empty state row
+                while(portfolioBody.children.length > 1) {
+                    portfolioBody.removeChild(portfolioBody.lastChild);
+                }
+
+                positions.forEach(pos => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-100 text-sm';
+                    
+                    const sideColor = pos.side === 'YES' ? 'text-black' : 'text-gray-500';
+                    
+                    tr.innerHTML = `
+                        <td class="py-3 font-mono ${sideColor}">${pos.side}</td>
+                        <td class="py-3 font-mono">${pos.shares.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="py-3 font-mono text-right text-gray-500">${formatCurrency(pos.cost)}</td>
+                        <td class="py-3 font-mono text-right">${formatCurrency(pos.payout)}</td>
+                    `;
+                    portfolioBody.appendChild(tr);
+                });
+            }
+        }
+
+        function placeOrder() {
+            const amount = parseFloat(inputAmount.value);
+            if (amount > 0 && amount <= balance) {
+                const price = marketPrices[selectedSide];
+                const shares = amount / price;
+                
+                balance -= amount;
+                
+                positions.unshift({
+                    side: selectedSide,
+                    shares: shares,
+                    cost: amount,
+                    payout: shares
+                });
+
+                inputAmount.value = ''; // Reset input
+                updateUI();
+                renderPortfolio();
+            }
+        }
+
+        // Event Listeners
+        btnSelectYes.addEventListener('click', () => { selectedSide = 'YES'; updateUI(); });
+        btnSelectNo.addEventListener('click', () => { selectedSide = 'NO'; updateUI(); });
+        inputAmount.addEventListener('input', updateUI);
+        btnPlaceOrder.addEventListener('click', placeOrder);
+
+        // Initialize
+        updateUI();
+        renderPortfolio();
+    </script>
+</body>
+</html>

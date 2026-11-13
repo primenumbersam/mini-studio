@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Format Picker · 상황별 이미지 포맷 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+        :root {
+            --ink: #111111;
+            --bg: #F6F4EF;
+            --surface: #FFFFFF;
+            --accent: #FFD100;
+            --accent-alt: #FF5A1F;
+            --mint: #B8F2C2;
+            --sky: #BAE6FD;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
+            line-height: 1.5;
+        }
+
+        .font-display {
+            font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif;
+        }
+
+        .neo-box {
+            border: 2px solid var(--ink);
+            box-shadow: 4px 4px 0 0 var(--ink);
+            background-color: var(--surface);
+        }
+
+        .neo-box-sm {
+            border: 2px solid var(--ink);
+            box-shadow: 2px 2px 0 0 var(--ink);
+            background-color: var(--surface);
+        }
+
+        .neo-btn {
+            border: 2px solid var(--ink);
+            box-shadow: 2px 2px 0 0 var(--ink);
+            background-color: var(--surface);
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+            cursor: pointer;
+        }
+
+        .neo-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 0 var(--ink);
+        }
+
+        .neo-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0 0 var(--ink);
+        }
+
+        .neo-btn.is-active {
+            background-color: var(--accent);
+            font-weight: 700;
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 230px;
+            background: var(--surface);
+            border: 2px solid var(--ink);
+            padding: 0.75rem;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
+
+    <!-- Top Navigation -->
+    <nav class="max-w-5xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div class="neo-box-sm px-3.5 py-1.5 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 bg-[var(--accent-alt)] border border-black inline-block"></span>
+            <span class="font-display text-sm font-bold tracking-tight">IMAGE FORMAT PICKER</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-medium">
+            <button onclick="scrollToSection('recommender')" class="neo-btn px-3 py-1.5 bg-[var(--accent)] font-bold">상황별 추천</button>
+            <button onclick="scrollToSection('classification')" class="neo-btn px-3 py-1.5">포맷 분류</button>
+            <button onclick="scrollToSection('analysis')" class="neo-btn px-3 py-1.5">성능 비교</button>
+        </div>
+    </nav>
+
+    <!-- Compact Hero -->
+    <header class="max-w-5xl mx-auto mb-8">
+        <div class="neo-box bg-[var(--accent)] p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <span class="inline-block bg-black text-white text-[11px] font-display font-bold px-2 py-0.5 mb-2 tracking-wide">
+                    GUIDE &amp; RECOMMENDER
+                </span>
+                <h1 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-black">
+                    이미지 포맷 상황별 추천 및 비교 도구
+                </h1>
+                <p class="text-xs sm:text-sm text-neutral-900 mt-1">
+                    용도, 투명도, 압축 방식에 따라 가장 효율적인 이미지 형식을 빠르게 선택하세요.
+                </p>
+            </div>
+            <div class="neo-box-sm px-3 py-2 text-xs font-medium shrink-0 self-start sm:self-center">
+                <span class="text-neutral-500 block text-[11px]">지원 포맷</span>
+                <span class="font-display font-bold">AVIF · WebP · JPEG · PNG · QOI · SVG · RAW</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto space-y-8">
+
+        <!-- Section 1: Situation-based Recommender -->
+        <section id="recommender" class="scroll-mt-6">
+            <div class="flex items-baseline justify-between mb-3">
+                <h2 class="font-display text-base sm:text-lg font-bold">01. 작업 목적별 포맷 추천</h2>
+                <span class="text-xs text-neutral-600">목적을 클릭하면 최적 포맷을 제안합니다</span>
+            </div>
+
+            <div class="neo-box p-4 sm:p-6 grid grid-cols-1 md:grid-cols-12 gap-5">
+                <!-- Situation Selector Buttons -->
+                <div class="md:col-span-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-2.5 content-start" id="usage-buttons">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <!-- Recommendation Result -->
+                <div id="recommendation-result" class="md:col-span-7 neo-box-sm bg-[#FAF8F5] p-5 flex flex-col justify-between">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Classification Explorer -->
+        <section id="classification" class="scroll-mt-6">
+            <div class="flex items-baseline justify-between mb-3">
+                <h2 class="font-display text-base sm:text-lg font-bold">02. 압축 및 데이터 방식별 분류</h2>
+                <span class="text-xs text-neutral-600">5가지 핵심 분류 및 대표 포맷</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-4 flex md:flex-col gap-2 overflow-x-auto pb-1 md:pb-0" id="explorer-tabs">
+                    <!-- Rendered by JS -->
+                </div>
+                <div class="md:col-span-8">
+                    <div id="explorer-content" class="neo-box p-5 h-full flex flex-col justify-between">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Quantitative Analysis -->
+        <section id="analysis" class="scroll-mt-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="font-display text-base sm:text-lg font-bold">03. 주요 포맷 비교 분석</h2>
+                <div class="flex gap-2 text-xs">
+                    <button onclick="switchAnalysis('lossy')" id="tab-btn-lossy" class="neo-btn px-3 py-1.5 is-active">손실: JPEG vs AVIF</button>
+                    <button onclick="switchAnalysis('lossless')" id="tab-btn-lossless" class="neo-btn px-3 py-1.5">무손실: PNG vs QOI</button>
+                    <button onclick="switchAnalysis('vector')" id="tab-btn-vector" class="neo-btn px-3 py-1.5">벡터: SVG vs AI</button>
+                </div>
+            </div>
+
+            <!-- Lossy Panel -->
+            <div id="panel-lossy" class="analysis-panel grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-5 space-y-3">
+                    <div class="neo-box-sm p-4 border-l-4 border-l-black">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-display text-sm font-bold">JPEG</h3>
+                            <span class="text-[11px] px-1.5 py-0.5 bg-neutral-200 font-bold">범용 표준</span>
+                        </div>
+                        <p class="text-xs text-neutral-700">모든 환경에서 호환되지만 압축 효율이 낮고 투명도(Alpha)를 지원하지 않습니다.</p>
+                    </div>
+                    <div class="neo-box-sm p-4 bg-[var(--sky)]">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-display text-sm font-bold">AVIF</h3>
+                            <span class="text-[11px] px-1.5 py-0.5 bg-white border border-black font-bold">차세대 추천</span>
+                        </div>
+                        <p class="text-xs text-neutral-900">JPEG 대비 절반 수준의 용량으로 고화질을 유지하며, HDR과 투명 배경을 모두 지원합니다.</p>
+                    </div>
+                </div>
+                <div class="md:col-span-7 neo-box-sm p-4 flex flex-col">
+                    <span class="text-xs font-bold mb-2 text-neutral-700">동일 화질 기준 상대 파일 크기 (%, 낮을수록 우수)</span>
+                    <div class="chart-wrap">
+                        <canvas id="lossyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lossless Panel -->
+            <div id="panel-lossless" class="analysis-panel hidden grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-5 space-y-3">
+                    <div class="neo-box-sm p-4 bg-[var(--accent)]">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-display text-sm font-bold">PNG</h3>
+                            <span class="text-[11px] px-1.5 py-0.5 bg-white border border-black font-bold">웹 무손실 표준</span>
+                        </div>
+                        <p class="text-xs text-neutral-900">투명 배경과 무손실 보존이 필요한 UI·스크린샷에 적합하지만 사진에서는 용량이 큽니다.</p>
+                    </div>
+                    <div class="neo-box-sm p-4 bg-[var(--mint)]">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-display text-sm font-bold">QOI</h3>
+                            <span class="text-[11px] px-1.5 py-0.5 bg-white border border-black font-bold">초고속 처리</span>
+                        </div>
+                        <p class="text-xs text-neutral-900">단순한 알고리즘으로 PNG와 비슷한 압축률을 유지하면서 인코딩·디코딩 속도가 매우 빠릅니다.</p>
+                    </div>
+                </div>
+                <div class="md:col-span-7 neo-box-sm p-4 flex flex-col">
+                    <span class="text-xs font-bold mb-2 text-neutral-700">상대 처리 시간 비교 (낮을수록 빠름)</span>
+                    <div class="chart-wrap">
+                        <canvas id="losslessChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vector Panel -->
+            <div id="panel-vector" class="analysis-panel hidden grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-6 space-y-3">
+                    <div class="neo-box-sm p-4 border-l-4 border-l-black">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-display text-sm font-bold">SVG</h3>
+                            <span class="text-[11px] px-1.5 py-0.5 bg-neutral-200 font-bold">웹 네이티브</span>
+                        </div>
+                        <p class="text-xs text-neutral-700">XML 기반 벡터 포맷으로 해상도 손실 없이 확대되며 CSS/JS로 직접 제어할 수 있습니다.</p>
+                    </div>
+                    <div class="neo-box-sm p-4 border-l-4 border-l-[var(--accent-alt)]">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-display text-sm font-bold">AI / PDF</h3>
+                            <span class="text-[11px] px-1.5 py-0.5 bg-neutral-200 font-bold">편집·인쇄용</span>
+                        </div>
+                        <p class="text-xs text-neutral-700">레이어, 아트보드, CMYK 색상 정보를 보존하여 인쇄물 및 디자인 원본 보관에 사용합니다.</p>
+                    </div>
+                </div>
+                <div class="md:col-span-6 neo-box-sm bg-[#111111] text-white p-5 flex flex-col items-center justify-center text-center">
+                    <span class="text-xs font-display font-bold tracking-wider text-[var(--accent)] mb-4">VECTOR ZOOM SIMULATION</span>
+                    <div class="flex items-center gap-8">
+                        <div class="group cursor-pointer">
+                            <div class="w-16 h-16 bg-white text-black text-xs font-bold flex items-center justify-center border-2 border-white transition-transform duration-300 group-hover:scale-[2] group-hover:blur-[1.5px]">
+                                BITMAP
+                            </div>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <div class="w-16 h-16 bg-[var(--mint)] text-black text-xs font-bold flex items-center justify-center border-2 border-white transition-transform duration-300 group-hover:scale-[2]">
+                                VECTOR
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-6 text-xs text-neutral-400">박스에 마우스를 올려 확대 시 선명도 차이를 확인하세요</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="max-w-5xl mx-auto mt-10 pt-4 border-t-2 border-black flex flex-wrap justify-between items-center gap-2 text-xs text-neutral-600">
+        <span class="font-display font-bold text-black">IMAGE FORMAT SPECIFICATION GUIDE</span>
+        <span>Neo-Brutalism Compact Edition</span>
+    </footer>
+
+    <script>
+        const USAGE_SCENARIOS = [
+            {
+                id: 'photo_web',
+                label: '웹용 고화질 사진',
+                sub: '블로그 · 커머스',
+                primary: 'AVIF',
+                fallback: 'WebP / JPEG',
+                reason: '동일 화질 대비 JPEG보다 용량이 45~55% 작아 웹 페이지 로딩 속도와 트래픽 절감에 가장 유리합니다.',
+                specs: { 투명도: '지원', 압축: '손실 / 무손실', 호환성: '최신 브라우저' }
+            },
+            {
+                id: 'icon_logo',
+                label: '로고 및 아이콘',
+                sub: 'UI · 브랜드 심볼',
+                primary: 'SVG',
+                fallback: 'PNG (@2x/@3x)',
+                reason: '수학적 좌표 기반이므로 레티나 디스플레이나 초대형 화면으로 확대해도 픽셀 깨짐이 전혀 없습니다.',
+                specs: { 투명도: '지원', 압축: '벡터 (텍스트)', 호환성: '모든 웹' }
+            },
+            {
+                id: 'transparent',
+                label: '투명 배경 이미지',
+                sub: '누끼 · 오버레이',
+                primary: 'WebP / PNG',
+                fallback: 'AVIF',
+                reason: '웹 최적화에는 용량이 작은 WebP(손실+알파)가 효율적이며, 범용 호환성과 무손실 품질이 필요하면 PNG를 사용합니다.',
+                specs: { 투명도: '알파 채널', 압축: '무손실 / 손실', 호환성: '최상' }
+            },
+            {
+                id: 'game_texture',
+                label: '게임 · 실시간 렌더',
+                sub: '임베디드 · 엔진',
+                primary: 'QOI',
+                fallback: 'KTX2 / PNG',
+                reason: '압축과 해제 알고리즘이 매우 단순해 PNG 대비 수 배 이상 빠르게 디코딩되므로 실시간 리소스 로딩에 적합합니다.',
+                specs: { 투명도: '지원', 압축: '고속 무손실', 호환성: '전용 디코더' }
+            },
+            {
+                id: 'print_design',
+                label: '인쇄 및 편집 원본',
+                sub: '포스터 · 출판',
+                primary: 'AI / TIFF',
+                fallback: 'PDF (CMYK)',
+                reason: 'CMYK 색역, 고해상도(300DPI 이상), 레이어 및 패스 정보를 손실 없이 보존해 인쇄소 출력 규격에 대응합니다.',
+                specs: { 투명도: '지원', 압축: '무손실 / 원본', 호환성: '디자인 툴' }
+            },
+            {
+                id: 'photo_raw',
+                label: '촬영 후 색보정',
+                sub: '라이트룸 · 후보정',
+                primary: 'RAW / DNG',
+                fallback: '16-bit TIFF',
+                reason: '카메라 센서가 받아들인 빛 정보를 가공 없이 기록해 노출, 화이트밸런스, 암부 복원 관용도가 가장 높습니다.',
+                specs: { 투명도: '미지원', 압축: '센서 비압축', 호환성: '현상 SW' }
+            }
+        ];
+
+        const EXPLORER_DATA = {
+            lossy: {
+                tab: '1. 손실 압축',
+                title: '손실 압축 (Lossy)',
+                desc: '시각적으로 인지하기 어려운 색상·고주파 정보를 제거해 파일 크기를 대폭 줄입니다. 사진과 복합 이미지의 웹 전송에 필수적입니다.',
+                formats: [
+                    { name: 'AVIF', note: '최고 압축률 · HDR' },
+                    { name: 'WebP', note: '우수한 호환·용량' },
+                    { name: 'JPEG', note: '구형 포함 전천후' },
+                    { name: 'HEIF', note: '모바일 기본 촬영' }
+                ],
+                tint: 'var(--sky)'
+            },
+            lossless: {
+                tab: '2. 무손실 압축',
+                title: '무손실 압축 (Lossless)',
+                desc: '픽셀 데이터를 100% 원본 그대로 복원할 수 있도록 패턴을 압축합니다. 텍스트, UI 캡처, 투명 배경 이미지에 적합합니다.',
+                formats: [
+                    { name: 'PNG', note: '투명 배경 웹 표준' },
+                    { name: 'QOI', note: '초고속 인코더' },
+                    { name: 'TIFF', note: '인쇄·아카이브용' },
+                    { name: 'GIF', note: '256색 단순 움짤' }
+                ],
+                tint: 'var(--accent)'
+            },
+            raw: {
+                tab: '3. 작업용 RAW',
+                title: '작업 및 원본 데이터 (RAW / Work)',
+                desc: '후보정과 레이어 재편집을 위해 센서 원시 데이터나 편집 히스토리를 그대로 보관하는 포맷입니다.',
+                formats: [
+                    { name: 'RAW / DNG', note: '카메라 센서 원본' },
+                    { name: 'PSD', note: '포토샵 레이어' },
+                    { name: 'EXR', note: '32-bit HDR 합성' }
+                ],
+                tint: '#F3F4F6'
+            },
+            uncompressed: {
+                tab: '4. 무압축 비트맵',
+                title: '무압축 (Uncompressed)',
+                desc: '별도 압축 연산 없이 모든 픽셀의 RGB 값을 순차적으로 기록합니다. 용량은 매우 크지만 디코딩 오버헤드가 없습니다.',
+                formats: [
+                    { name: 'BMP', note: '윈도우 표준 비트맵' },
+                    { name: 'PPM', note: '학습·테스트용' }
+                ],
+                tint: '#F3F4F6'
+            },
+            vector: {
+                tab: '5. 벡터 형식',
+                title: '벡터 그래픽 (Vector)',
+                desc: '픽셀 격자가 아닌 점·선·곡선의 수학 방정식으로 이미지를 정의합니다. 해상도와 무관하게 항상 선명합니다.',
+                formats: [
+                    { name: 'SVG', note: '웹/UI 아이콘 표준' },
+                    { name: 'AI', note: '일러스트레이터 원본' },
+                    { name: 'PDF', note: '인쇄·문서 배포' },
+                    { name: 'EPS', note: '레거시 인쇄 호환' }
+                ],
+                tint: 'var(--mint)'
+            }
+        };
+
+        let activeUsageId = USAGE_SCENARIOS[0].id;
+        let activeExplorerKey = 'lossy';
+        let lossyChart = null;
+        let losslessChart = null;
+
+        function renderUsageButtons() {
+            const container = document.getElementById('usage-buttons');
+            container.innerHTML = USAGE_SCENARIOS.map(item => {
+                const isActive = item.id === activeUsageId;
+                return `
+                    <button onclick="selectUsage('${item.id}')"
+                        class="neo-btn p-2.5 text-left ${isActive ? 'is-active' : ''}">
+                        <span class="block text-xs font-bold text-black">${item.label}</span>
+                        <span class="block text-[11px] text-neutral-600 mt-0.5">${item.sub}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectUsage(id) {
+            activeUsageId = id;
+            renderUsageButtons();
+
+            const item = USAGE_SCENARIOS.find(s => s.id === id);
+            const resultEl = document.getElementById('recommendation-result');
+
+            resultEl.innerHTML = `
+                <div class="fade-in space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-black pb-2.5">
+                        <div>
+                            <span class="text-[11px] font-display font-bold uppercase text-neutral-500 block">RECOMMENDED FORMAT</span>
+                            <div class="flex items-baseline gap-2.5 mt-0.5">
+                                <span class="font-display text-2xl sm:text-3xl font-bold text-black">${item.primary}</span>
+                                <span class="text-xs font-medium text-neutral-600">대안: ${item.fallback}</span>
+                            </div>
+                        </div>
+                        <span class="neo-box-sm px-2.5 py-1 bg-[var(--mint)] text-xs font-bold">${item.label}</span>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-neutral-800 leading-relaxed">${item.reason}</p>
+
+                    <div class="grid grid-cols-3 gap-2 pt-1">
+                        ${Object.entries(item.specs).map(([k, v]) => `
+                            <div class="bg-white border border-black p-2">
+                                <span class="block text-[10px] text-neutral-500">${k}</span>
+                                <span class="block text-xs font-bold text-black mt-0.5">${v}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderExplorerTabs() {
+            const container = document.getElementById('explorer-tabs');
+            container.innerHTML = Object.entries(EXPLORER_DATA).map(([key, data]) => {
+                const isActive = key === activeExplorerKey;
+                return `
+                    <button onclick="selectExplorer('${key}')"
+                        class="neo-btn px-3.5 py-2.5 text-left text-xs sm:text-sm font-bold shrink-0 flex items-center justify-between ${isActive ? 'is-active' : ''}"
+                        style="${isActive ? `background-color: ${data.tint};` : ''}">
+                        <span>${data.tab}</span>
+                        <span class="hidden md:inline text-xs">→</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectExplorer(key) {
+            activeExplorerKey = key;
+            renderExplorerTabs();
+
+            const data = EXPLORER_DATA[key];
+            const contentEl = document.getElementById('explorer-content');
+            contentEl.innerHTML = `
+                <div class="fade-in flex flex-col h-full justify-between space-y-4">
+                    <div>
+                        <div class="inline-block px-2 py-0.5 border border-black text-[11px] font-bold mb-2" style="background-color: ${data.tint};">
+                            CATEGORY
+                        </div>
+                        <h3 class="font-display text-lg font-bold text-black mb-1.5">${data.title}</h3>
+                        <p class="text-xs sm:text-sm text-neutral-700 leading-relaxed">${data.desc}</p>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                        ${data.formats.map(f => `
+                            <div class="neo-box-sm p-2.5 bg-[#FAF8F5]">
+                                <span class="font-display block text-sm font-bold text-black">${f.name}</span>
+                                <span class="block text-[11px] text-neutral-600 mt-0.5">${f.note}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function switchAnalysis(key) {
+            document.querySelectorAll('.analysis-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`panel-${key}`).classList.remove('hidden');
+
+            ['lossy', 'lossless', 'vector'].forEach(k => {
+                const btn = document.getElementById(`tab-btn-${k}`);
+                btn.classList.toggle('is-active', k === key);
+            });
+
+            if (key === 'lossy' && lossyChart) lossyChart.resize();
+            if (key === 'lossless' && losslessChart) losslessChart.resize();
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function initCharts() {
+            const baseOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        ticks: { font: { size: 11, weight: 'bold', family: 'Space Grotesk' }, color: '#111' },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        border: { width: 2, color: '#111' },
+                        ticks: { font: { size: 11, weight: 'bold' }, color: '#444' },
+                        grid: { color: '#e5e7eb' }
+                    }
+                }
+            };
+
+            lossyChart = new Chart(document.getElementById('lossyChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['JPEG', 'WebP', 'AVIF'],
+                    datasets: [{
+                        data: [100, 70, 45],
+                        backgroundColor: ['#111111', '#FFD100', '#BAE6FD'],
+                        borderColor: '#111111',
+                        borderWidth: 2
+                    }]
+                },
+                options: baseOptions
+            });
+
+            losslessChart = new Chart(document.getElementById('losslessChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['PNG (Enc)', 'QOI (Enc)', 'PNG (Dec)', 'QOI (Dec)'],
+                    datasets: [{
+                        data: [90, 8, 70, 5],
+                        backgroundColor: ['#FFD100', '#B8F2C2', '#FFD100', '#B8F2C2'],
+                        borderColor: '#111111',
+                        borderWidth: 2
+                    }]
+                },
+                options: baseOptions
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            selectUsage('photo_web');
+            selectExplorer('lossy');
+            initCharts();
+        });
+    </script>
+</body>
+
+</html>

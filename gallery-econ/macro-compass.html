@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>경기국면 나침반 / Macro Compass</title>
+  <!-- UnoCSS Runtime CDN & Reset -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css">
+  <script>
+    window.__unocss = {
+      theme: {
+        colors: {
+          paper: {
+            50: '#fafafa',
+            100: '#f5f5f7',
+            200: '#e5e5ea',
+            300: '#d1d1d6',
+            border: '#e2e8f0',
+            borderDark: '#cbd5e1',
+            muted: '#64748b',
+            body: '#1e293b',
+            card: '#ffffff'
+          },
+          regime: {
+            accelExp: '#0284c7',
+            decelExp: '#d97706',
+            accelRec: '#dc2626',
+            decelRec: '#059669'
+          }
+        },
+        fontFamily: {
+          sans: '-apple-system, BlinkMacSystemFont, Pretendard, Inter, Helvetica Neue, sans-serif',
+          mono: 'JetBrains Mono, SF Mono, Menlo, Consolas, monospace'
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      letter-spacing: -0.012em;
+    }
+
+    .num-tabular {
+      font-feature-settings: "tnum" 1, "kern" 1;
+    }
+
+    .compass-grid-line {
+      stroke: #e2e8f0;
+      stroke-dasharray: 4 4;
+    }
+
+    .quadrant-active {
+      box-shadow: 0 0 0 2px #0f172a;
+    }
+
+    /* Smooth transition for active phase beacon */
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: scale(1.4);
+        opacity: 0.2;
+      }
+
+      100% {
+        transform: scale(0.95);
+        opacity: 0.8;
+      }
+    }
+
+    .beacon-pulse {
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col font-sans selection:bg-slate-900 selection:text-white">
+
+  <header class="border-b border-paper-border bg-white sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="h-16 flex items-center justify-between">
+
+        <!-- App Title & Identity -->
+        <div class="flex items-baseline space-x-3">
+          <div
+            class="w-8 h-8 rounded-lg bg-slate-500 text-white flex items-center justify-center font-mono font-black text-sm shadow-sm">
+            <i data-lucide="compass" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900">
+                경기국면 나침반
+              </h1>
+              <span
+                class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                4 State Macro Compass
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation Player Controls -->
+        <div class="flex items-center space-x-2">
+          <div class="flex items-center bg-slate-50 border border-paper-border rounded-lg p-1 text-xs font-mono">
+            <button id="btn-play-pause" onclick="togglePlayback()"
+              class="px-2.5 py-1 rounded bg-white shadow-xs border border-slate-200 hover:bg-slate-100 font-bold text-slate-800 flex items-center gap-1.5 transition">
+              <i id="icon-play" data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span id="txt-play">사이클 재생</span>
+            </button>
+            <button onclick="stepCycle(-1)" class="p-1.5 hover:bg-white rounded text-slate-600 transition"
+              title="이전 단계">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <span id="cycle-step-display" class="px-2 font-semibold text-slate-700">6 / 12</span>
+            <button onclick="stepCycle(1)" class="p-1.5 hover:bg-white rounded text-slate-600 transition" title="다음 단계">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <button onclick="resetToCurrentState()"
+            class="hidden sm:flex border border-paper-border bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-mono items-center gap-1.5 transition shadow-xs">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span>현재 기준점</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- Top Status Cards: 0th, 1st, 2nd Derivatives & Active Phase -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <!-- Card 1: Active Phase Flag -->
+      <div
+        class="bg-white rounded-xl border border-paper-border p-4 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-semibold">현재 경제 위상
+            (Regime)</span>
+          <span id="badge-phase-code"
+            class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-200">
+            Q2 · 감속 확장
+          </span>
+        </div>
+        <div class="my-1.5">
+          <h2 id="disp-phase-title" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            피크아웃 감속 확장
+          </h2>
+          <p id="disp-phase-eng" class="text-xs font-mono text-slate-500">Decelerating Expansion</p>
+        </div>
+        <div class="text-[11px] text-slate-600 border-t border-slate-100 pt-2 mt-1 flex items-center gap-1.5">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
+          <span id="disp-phase-hint">성장률 유지 중이나 둔화 압력 가시화</span>
+        </div>
+      </div>
+
+      <!-- Card 2: 0th Derivative (Level) -->
+      <div class="bg-white rounded-xl border border-paper-border p-4 shadow-xs flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-mono uppercase tracking-wider font-semibold">0차: 절대 레벨 (Level X_t)</span>
+          <i data-lucide="bar-chart-2" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div class="my-1.5">
+          <div class="flex items-baseline space-x-2">
+            <span id="metric-level"
+              class="text-2xl sm:text-3xl font-black text-slate-900 num-tabular font-mono">53.8</span>
+            <span class="text-xs font-mono text-slate-500">기준선 50.0</span>
+          </div>
+          <span id="metric-level-status"
+            class="inline-block mt-0.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+            절대 호황 (Expansionary)
+          </span>
+        </div>
+        <div class="text-[11px] font-mono text-slate-500 border-t border-slate-100 pt-2">
+          공통 잠재 지표 지수화 레벨
+        </div>
+      </div>
+
+      <!-- Card 3: 1st Derivative (Velocity) -->
+      <div class="bg-white rounded-xl border border-paper-border p-4 shadow-xs flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-mono uppercase tracking-wider font-semibold">1차: 속도 (Velocity ΔX_t)</span>
+          <i data-lucide="trending-up" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div class="my-1.5">
+          <div class="flex items-baseline space-x-2">
+            <span id="metric-vel"
+              class="text-2xl sm:text-3xl font-black text-emerald-600 num-tabular font-mono">+0.65</span>
+            <span class="text-xs font-mono text-slate-500">pt / month</span>
+          </div>
+          <span id="metric-vel-status" class="inline-block mt-0.5 text-xs font-medium text-slate-700">
+            방향성: 전월 대비 개선 유지
+          </span>
+        </div>
+        <div class="text-[11px] font-mono text-slate-500 border-t border-slate-100 pt-2">
+          ΔX &gt; 0 : 성장 탄력 잔존
+        </div>
+      </div>
+
+      <!-- Card 4: 2nd Derivative (Acceleration) -->
+      <div class="bg-white rounded-xl border border-paper-border p-4 shadow-xs flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-mono uppercase tracking-wider font-semibold">2차: 가속도 (Accel Δ²X_t)</span>
+          <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div class="my-1.5">
+          <div class="flex items-baseline space-x-2">
+            <span id="metric-acc"
+              class="text-2xl sm:text-3xl font-black text-amber-600 num-tabular font-mono">-0.42</span>
+            <span class="text-xs font-mono text-slate-500">pt / month²</span>
+          </div>
+          <span id="metric-acc-status"
+            class="inline-block mt-0.5 text-xs font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+            감속 전환 (Concave 피크아웃)
+          </span>
+        </div>
+        <div class="text-[11px] font-mono text-amber-700 border-t border-slate-100 pt-2 font-medium">
+          ★ 주식시장 밸류에이션 선행 경고
+        </div>
+      </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left: 2D Phase Space Canvas (Macro Compass) -->
+      <div
+        class="lg:col-span-7 bg-white rounded-xl border border-paper-border p-5 shadow-xs flex flex-col justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-paper-border gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900">
+                위상 공간 나침반 (Phase Space Portrait)
+              </h3>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                [X: 속도 ΔX] × [Y: 가속도 Δ²X]
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              중심점(0,0)을 기준으로 시계방향(Clockwise) 4사분면 순환 궤적을 추적합니다.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 font-mono text-xs">
+            <button onclick="setChartMode('phase')" id="btn-mode-phase"
+              class="px-2.5 py-1 rounded bg-slate-900 text-white font-bold transition">
+              위상도
+            </button>
+            <button onclick="setChartMode('timeseries')" id="btn-mode-ts"
+              class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+              시계열
+            </button>
+          </div>
+        </div>
+
+        <!-- Chart Container with 4 Quadrant Background Watermark -->
+        <div class="relative w-full h-[360px] sm:h-[400px] mt-4">
+
+          <!-- Subtle Quadrant Labels Overlay -->
+          <div id="quadrant-overlay"
+            class="absolute inset-0 pointer-events-none grid grid-cols-2 grid-rows-2 p-8 text-xs font-mono select-none">
+            <!-- Top Left: decelerating recovery (actually in velocity-accel plane: vel < 0, acc > 0 is Q4 bottom-left or top-left depending on axis) -->
+            <!-- We will map: X = Velocity ΔX (-1.5 to +1.5), Y = Acceleration Δ²X (-1.5 to +1.5) -->
+            <!-- Top Right: Vel > 0, Acc > 0 (Phase 1: Accelerating Expansion) -->
+            <div
+              class="p-2 border-r border-b border-dashed border-slate-200 flex flex-col justify-between bg-emerald-50/20">
+              <span class="text-[10px] font-bold text-emerald-800">IV. 감속 수축 (바닥 통과)</span>
+              <span class="text-[10px] text-slate-400">ΔX &lt; 0, Δ²X &gt; 0</span>
+            </div>
+            <div
+              class="p-2 border-b border-dashed border-slate-200 flex flex-col justify-between items-end text-right bg-sky-50/20">
+              <span class="text-[10px] font-bold text-sky-800">I. 가속 확장 (호황 심화)</span>
+              <span class="text-[10px] text-slate-400">ΔX &gt; 0, Δ²X &gt; 0</span>
+            </div>
+            <div class="p-2 border-r border-dashed border-slate-200 flex flex-col justify-between bg-red-50/20">
+              <span class="text-[10px] text-slate-400">ΔX &lt; 0, Δ²X &lt; 0</span>
+              <span class="text-[10px] font-bold text-red-800">III. 가속 수축 (본격 침체)</span>
+            </div>
+            <div class="p-2 flex flex-col justify-between items-end text-right bg-amber-50/20">
+              <span class="text-[10px] text-slate-400">ΔX &gt; 0, Δ²X &lt; 0</span>
+              <span class="text-[10px] font-bold text-amber-800">II. 감속 확장 (피크아웃)</span>
+            </div>
+          </div>
+
+          <canvas id="chart-compass"></canvas>
+        </div>
+
+        <!-- Legend / Axis Guides -->
+        <div
+          class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-500">
+          <div class="flex items-center gap-4">
+            <span class="inline-flex items-center gap-1.5 text-slate-700">
+              <span class="w-3 h-3 rounded-full bg-slate-900"></span> 활성 상태 (Current)
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-slate-400">
+              <span class="w-4 h-0.5 bg-slate-400"></span> 최근 12개월 궤적
+            </span>
+          </div>
+          <div>
+            변곡점(Inflection): <span class="font-bold text-slate-800">Δ²X = 0 선 교차</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Asset Allocation Implications & Phase Playbook -->
+      <div class="lg:col-span-5 space-y-4 flex flex-col">
+
+        <!-- Active Phase Strategic Playbook Card -->
+        <div class="bg-white rounded-xl border border-paper-border p-5 shadow-xs flex-1">
+          <div class="border-b border-paper-border pb-3 mb-4 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-mono tracking-widest text-slate-400 uppercase">Strategic Playbook</span>
+              <h3 class="text-sm font-bold text-slate-900 uppercase">국면별 자산배분 및 행동 강령</h3>
+            </div>
+            <span id="playbook-tag"
+              class="text-xs font-mono font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+              DEFENSIVE TILT
+            </span>
+          </div>
+
+          <!-- Key Diagnostic Description -->
+          <div class="space-y-3 text-xs leading-relaxed text-slate-600">
+            <p id="playbook-desc">
+              현재 <strong class="text-slate-900">감속 확장(II 국면)</strong>에 위치합니다. 경제 지표의 절대 레벨은 여전히 장기 평균을 상회하며 전월비 확장세를
+              보이지만, <strong>성장의 가속도($\Delta^2 X &lt; 0$)가 음수로 전환</strong>되어 모멘텀 둔화가 시작되었습니다.
+            </p>
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 space-y-1">
+              <div class="font-bold flex items-center gap-1.5 text-slate-900">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-amber-500"></i>
+                <span>자본시장 선행 메커니즘</span>
+              </div>
+              <p id="playbook-action" class="text-[11px] leading-normal text-slate-600">
+                스마트 머니는 이 구간에서 성장률 둔화를 선반영하며 고밸류에이션 주식의 비중을 축소하고 듀레이션(국채) 및 고배당·방어주로 자금을 이동시킵니다.
+              </p>
+            </div>
+          </div>
+
+          <!-- Dynamic Asset Class Allocation Bars -->
+          <div class="mt-5 space-y-3">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="font-bold text-slate-800">권고 자산군 포트폴리오 비중 (Weights)</span>
+              <span class="text-slate-400 text-[10px]">E[R] & Risk Optimization</span>
+            </div>
+
+            <!-- Stocks -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs font-mono">
+                <span class="text-slate-600 font-medium">주식 (Equities)</span>
+                <span id="weight-stocks-val" class="font-bold text-slate-900">35%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div id="bar-stocks" class="h-full bg-blue-600 rounded-full transition-all duration-500"
+                  style="width: 35%"></div>
+              </div>
+            </div>
+
+            <!-- Bonds -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs font-mono">
+                <span class="text-slate-600 font-medium">채권 (Treasuries)</span>
+                <span id="weight-bonds-val" class="font-bold text-slate-900">40%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div id="bar-bonds" class="h-full bg-slate-700 rounded-full transition-all duration-500"
+                  style="width: 40%"></div>
+              </div>
+            </div>
+
+            <!-- Commodities -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs font-mono">
+                <span class="text-slate-600 font-medium">원자재 (Commodities)</span>
+                <span id="weight-cmd-val" class="font-bold text-slate-900">10%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div id="bar-cmd" class="h-full bg-amber-500 rounded-full transition-all duration-500"
+                  style="width: 10%"></div>
+              </div>
+            </div>
+
+            <!-- Cash -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs font-mono">
+                <span class="text-slate-600 font-medium">현금성 자산 (Cash / S-T)</span>
+                <span id="weight-cash-val" class="font-bold text-slate-900">15%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div id="bar-cash" class="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                  style="width: 15%"></div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="bg-white rounded-xl border border-paper-border p-5 shadow-xs">
+      <div
+        class="border-b border-paper-border pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-slate-700"></i>
+            <span>거시 위상 시뮬레이터 (Interactive Sandbox)</span>
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">
+            속도($\Delta X$)와 가속도($\Delta^2 X$) 슬라이더를 직접 움직여 나침반이 가리키는 사분면과 자산배분 변화를 실시간으로 테스트하세요.
+          </p>
+        </div>
+        <button onclick="syncSandboxToCurrent()"
+          class="text-xs font-mono text-slate-600 hover:text-slate-900 underline">
+          현재 관측치 복원
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+
+        <!-- Controls (Sliders) -->
+        <div class="md:col-span-7 space-y-5">
+          <!-- Slider 1: Velocity -->
+          <div>
+            <div class="flex justify-between text-xs font-mono mb-1.5">
+              <span class="font-medium text-slate-700">1차 속도 (Velocity, ΔX)</span>
+              <span id="txt-slider-vel" class="font-bold text-slate-900">+0.65</span>
+            </div>
+            <input id="slider-vel" type="range" min="-1.5" max="1.5" step="0.05" value="0.65"
+              oninput="onSandboxChange()"
+              class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
+              <span>-1.5 (급격한 수축)</span>
+              <span>0.0 (속도 중립)</span>
+              <span>+1.5 (가파른 확장)</span>
+            </div>
+          </div>
+
+          <!-- Slider 2: Acceleration -->
+          <div>
+            <div class="flex justify-between text-xs font-mono mb-1.5">
+              <span class="font-medium text-slate-700">2차 가속도 (Acceleration, Δ²X)</span>
+              <span id="txt-slider-acc" class="font-bold text-slate-900">-0.42</span>
+            </div>
+            <input id="slider-acc" type="range" min="-1.5" max="1.5" step="0.05" value="-0.42"
+              oninput="onSandboxChange()"
+              class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
+              <span>-1.5 (감속 심화, Concave)</span>
+              <span>0.0 (변곡점 Inflection)</span>
+              <span>+1.5 (가속 탄력, Convex)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation Needle Card -->
+        <div class="md:col-span-5 bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+          <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-semibold">
+            시뮬레이션 산출 결과 (Simulated State)
+          </span>
+          <div class="my-3">
+            <div id="sim-quadrant-badge"
+              class="inline-block text-xs font-mono font-bold px-2.5 py-1 rounded bg-amber-100 text-amber-800 border border-amber-200 mb-1">
+              사분면 II: 감속 확장
+            </div>
+            <h4 id="sim-verdict-title" class="text-xl font-black text-slate-900">
+              피크아웃 경고 국면
+            </h4>
+            <p id="sim-verdict-desc" class="text-xs text-slate-600 mt-1">
+              성장세는 남아있으나 추진력이 소멸 중. 주식 밸류에이션 피크 도달.
+            </p>
+          </div>
+          <div class="border-t border-slate-200 pt-2 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-500">최적 위험자산 비중:</span>
+            <span id="sim-risk-exposure" class="font-bold text-slate-800">중립 이하 (45% 이하 권장)</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="border-b border-paper-border pb-2">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900">
+          4대 거시 위상(4-Phase Macro States) 해설 및 선행 메커니즘
+        </h3>
+        <p class="text-xs text-slate-500">
+          왜 2차 도함수($\Delta^2 X = 0$)가 단순한 지표 발표치보다 주식시장을 선행하는가?
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Phase 1 Card -->
+        <div class="bg-white rounded-xl border border-sky-200 p-4 shadow-xs relative overflow-hidden">
+          <div class="w-1.5 h-full bg-sky-500 absolute left-0 top-0"></div>
+          <div class="pl-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-sky-700">사분면 I (Q1)</span>
+              <span class="text-[10px] font-mono text-slate-400">ΔX &gt; 0, Δ²X &gt; 0</span>
+            </div>
+            <h4 class="font-black text-slate-900 text-base mt-1">가속 확장 (호황 심화)</h4>
+            <span class="text-[11px] font-mono text-slate-500 block mb-2">Accelerating Expansion</span>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              기저효과를 지나 기업 설비투자와 고용이 가속화되는 국면. 어닝 서프라이즈와 밸류에이션 리레이팅이 동반 폭발합니다.
+            </p>
+            <div class="mt-3 pt-2 border-t border-slate-100 text-[11px] font-mono">
+              <span class="text-slate-500 block">최선호 자산:</span>
+              <strong class="text-sky-700">성장주, 위험자산, 원자재</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 2 Card -->
+        <div class="bg-white rounded-xl border border-amber-200 p-4 shadow-xs relative overflow-hidden">
+          <div class="w-1.5 h-full bg-amber-500 absolute left-0 top-0"></div>
+          <div class="pl-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-amber-700">사분면 II (Q2)</span>
+              <span class="text-[10px] font-mono text-slate-400">ΔX &gt; 0, Δ²X &lt; 0</span>
+            </div>
+            <h4 class="font-black text-slate-900 text-base mt-1">감속 확장 (피크아웃)</h4>
+            <span class="text-[11px] font-mono text-slate-500 block mb-2">Decelerating Expansion</span>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              뉴스 헤드라인은 '사상 최고 호황'을 외치지만, 가속도가 음수로 돌아서며 이익 증가율의 탄력이 꺾이는 위험 구간입니다.
+            </p>
+            <div class="mt-3 pt-2 border-t border-slate-100 text-[11px] font-mono">
+              <span class="text-slate-500 block">최선호 자산:</span>
+              <strong class="text-amber-700">중기 국채, 퀄리티 가치주, 현금</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 3 Card -->
+        <div class="bg-white rounded-xl border border-red-200 p-4 shadow-xs relative overflow-hidden">
+          <div class="w-1.5 h-full bg-red-500 absolute left-0 top-0"></div>
+          <div class="pl-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-red-700">사분면 III (Q3)</span>
+              <span class="text-[10px] font-mono text-slate-400">ΔX &lt; 0, Δ²X &lt; 0</span>
+            </div>
+            <h4 class="font-black text-slate-900 text-base mt-1">가속 수축 (본격 침체)</h4>
+            <span class="text-[11px] font-mono text-slate-500 block mb-2">Accelerating Contraction</span>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              성장 둔화가 침체로 번지며 파산과 고용 위축이 가속화됩니다. 시장 전반의 유동성이 고갈되고 패닉 셀이 발생합니다.
+            </p>
+            <div class="mt-3 pt-2 border-t border-slate-100 text-[11px] font-mono">
+              <span class="text-slate-500 block">최선호 자산:</span>
+              <strong class="text-red-700">장기 국채, 현금(달러), 금</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 4 Card -->
+        <div class="bg-white rounded-xl border border-emerald-200 p-4 shadow-xs relative overflow-hidden">
+          <div class="w-1.5 h-full bg-emerald-500 absolute left-0 top-0"></div>
+          <div class="pl-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-emerald-700">사분면 IV (Q4)</span>
+              <span class="text-[10px] font-mono text-slate-400">ΔX &lt; 0, Δ²X &gt; 0</span>
+            </div>
+            <h4 class="font-black text-slate-900 text-base mt-1">감속 수축 (바닥 통과)</h4>
+            <span class="text-[11px] font-mono text-slate-500 block mb-2">Decelerating Contraction</span>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              경기는 여전히 바닥이지만 악화되는 속도가 둔화되며 가속도가 양전합니다. 주식시장이 선제적 V자 랠리를 시작합니다.
+            </p>
+            <div class="mt-3 pt-2 border-t border-slate-100 text-[11px] font-mono">
+              <span class="text-slate-500 block">최선호 자산:</span>
+              <strong class="text-emerald-700">고베타 경기민감주, 하이일드 채권</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-paper-border bg-white py-5 font-mono text-xs text-slate-500 mt-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-2 text-slate-700">
+        <span class="font-bold text-slate-900 uppercase">경기국면 나침반 • Macro Compass</span>
+        <span class="text-slate-300">|</span>
+        <span>교육용 거시 위상 모델 (4-Phase Dynamic Simulator)</span>
+      </div>
+      <div class="flex items-center space-x-4 text-slate-400 text-[11px]">
+        <span>SPEC: 2ND-ORDER DERIVATIVE PHASE PORTRAIT</span>
+        <span>THEME: LIGHT PURE</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 12-step simulated economic cycle dataset (Velocity and Acceleration)
+    // Starting in Phase 4 -> Phase 1 -> Phase 2 (Current) -> Phase 3 -> back to 4
+    const cycleData = [
+      { month: 'T-11M', phase: 4, level: 46.2, vel: -0.90, acc: 0.35, label: '침체 완화' },
+      { month: 'T-10M', phase: 4, level: 47.1, vel: -0.45, acc: 0.70, label: '바닥 통과' },
+      { month: 'T-9M', phase: 1, level: 48.8, vel: 0.30, acc: 0.85, label: '확장 진입' },
+      { month: 'T-8M', phase: 1, level: 50.4, vel: 0.85, acc: 0.75, label: '가속 폭발' },
+      { month: 'T-7M', phase: 1, level: 52.1, vel: 1.15, acc: 0.40, label: '호황 절정' },
+      { month: 'T-6M', phase: 2, level: 53.5, vel: 0.95, acc: -0.15, label: '감속 조짐' },
+      { month: 'T-5M', phase: 2, level: 54.2, vel: 0.80, acc: -0.30, label: '피크아웃' },
+      { month: 'Current', phase: 2, level: 53.8, vel: 0.65, acc: -0.42, label: '현재 관측치' }, // Step Index 7 (Default)
+      { month: 'T+1M', phase: 2, level: 52.8, vel: 0.20, acc: -0.60, label: '둔화 심화' },
+      { month: 'T+2M', phase: 3, level: 51.0, vel: -0.35, acc: -0.75, label: '수축 진입' },
+      { month: 'T+3M', phase: 3, level: 48.5, vel: -0.85, acc: -0.50, label: '본격 침체' },
+      { month: 'T+4M', phase: 4, level: 46.5, vel: -1.10, acc: 0.20, label: '하방 지지' }
+    ];
+
+    let currentStepIndex = 7; // Currently at 'Current'
+    let isPlaying = false;
+    let playInterval = null;
+    let chartInstance = null;
+    let chartMode = 'phase'; // 'phase' or 'timeseries'
+
+    // Phase definition details
+    const phaseSpecs = {
+      1: {
+        code: 'Q1 · 가속 확장',
+        title: 'Accelerating Expansion',
+        eng: 'ΔX > 0, Δ²X > 0',
+        badgeClass: 'bg-sky-100 text-sky-800 border-sky-200',
+        hint: '기업 실적 서프라이즈와 밸류에이션 동반 확장',
+        tag: 'AGGRESSIVE GROWTH',
+        tagClass: 'text-sky-700 bg-sky-50 border-sky-200',
+        desc: '<strong>가속 확장(I 국면)</strong>은 거시 지표가 지속적으로 성장하면서 가속도($\Delta^2 X > 0$)까지 탄력을 받는 최상의 골디락스·실적 장세 구간입니다.',
+        action: '주식과 고위험 자산의 비중을 극대화하고, 레버리지 및 경기 민감주, 기술 성장주에 집중 배분합니다.',
+        weights: { stocks: 65, bonds: 15, cmd: 15, cash: 5 },
+        riskText: '적극 확대 (65% 이상)'
+      },
+      2: {
+        code: 'Q2 · 감속 확장',
+        title: 'Decelerating Expansion',
+        eng: 'ΔX > 0, Δ²X < 0',
+        badgeClass: 'bg-amber-100 text-amber-800 border-amber-200',
+        hint: '성장률 유지 중이나 둔화 압력 가시화',
+        tag: 'DEFENSIVE TILT',
+        tagClass: 'text-amber-700 bg-amber-50 border-amber-200',
+        desc: '현재 <strong>감속 확장(II 국면)</strong>에 위치합니다. 경제 지표의 절대 레벨은 여전히 장기 평균을 상회하며 전월비 확장세를 보이지만, <strong>성장의 가속도($\Delta^2 X < 0$)가 음수로 전환</strong>되어 모멘텀 둔화가 시작되었습니다.',
+        action: '스마트 머니는 성장률 둔화를 선반영하며 고밸류에이션 주식의 비중을 축소하고 듀레이션(국채) 및 고배당·방어주로 자금을 이동시킵니다.',
+        weights: { stocks: 35, bonds: 40, cmd: 10, cash: 15 },
+        riskText: '중립 이하 (35% 권장)'
+      },
+      3: {
+        code: 'Q3 · 가속 수축',
+        title: 'Accelerating Contraction',
+        eng: 'ΔX < 0, Δ²X < 0',
+        badgeClass: 'bg-red-100 text-red-800 border-red-200',
+        hint: '경기 급락 및 시스템 신용 스프레드 확대',
+        tag: 'CAPITAL PRESERVATION',
+        tagClass: 'text-red-700 bg-red-50 border-red-200',
+        desc: '<strong>가속 수축(III 국면)</strong>은 경기 둔화가 본격적인 침체로 확산되는 구간입니다. 지표가 위축되는 속도가 점점 빨라지며 금융 시장 전반의 디레버리징이 발생합니다.',
+        action: '주식 노출을 최소화하고 장기 안전 국채와 현금성 자산을 최대로 확보하여 자본 보존에 전념합니다.',
+        weights: { stocks: 15, bonds: 50, cmd: 5, cash: 30 },
+        riskText: '최소화 (15% 이하 축소)'
+      },
+      4: {
+        code: 'Q4 · 감속 수축',
+        title: 'Decelerating Contraction',
+        eng: 'ΔX < 0, Δ²X > 0',
+        badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        hint: '악화 속도 둔화, 선제적 유동성 V자 반등 잉태',
+        tag: 'ACCUMULATION / RISK-ON',
+        tagClass: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+        desc: '<strong>감속 수축(IV 국면)</strong>은 경기는 여전히 불황에 머물러 있으나, <strong>악화의 속도가 둔화되며 가속도($\Delta^2 X > 0$)가 반등</strong>하는 핵심 변곡점입니다.',
+        action: '주식시장은 거시 지표 저점보다 3~6개월 먼저 바닥을 치고 강하게 반등합니다. 낙폭과대 경기민감주를 선제 매집합니다.',
+        weights: { stocks: 55, bonds: 25, cmd: 10, cash: 10 },
+        riskText: '선제 확대 (55% 이상)'
+      }
+    };
+
+    function updateDashboardToStep(idx) {
+      currentStepIndex = idx;
+      const point = cycleData[idx];
+      const spec = phaseSpecs[point.phase];
+
+      // Step indicator
+      document.getElementById('cycle-step-display').innerText = `${idx + 1} / ${cycleData.length}`;
+
+      // Card Metrics
+      document.getElementById('badge-phase-code').className = `text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${spec.badgeClass}`;
+      document.getElementById('badge-phase-code').innerText = spec.code;
+      document.getElementById('disp-phase-title').innerText = spec.title;
+      document.getElementById('disp-phase-eng').innerText = spec.eng;
+      document.getElementById('disp-phase-hint').innerText = spec.hint;
+
+      // Metric numbers
+      document.getElementById('metric-level').innerText = point.level.toFixed(1);
+      const levelEl = document.getElementById('metric-level-status');
+      if (point.level >= 50) {
+        levelEl.className = 'inline-block mt-0.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200';
+        levelEl.innerText = '절대 확장 영역 (Expansionary)';
+      } else {
+        levelEl.className = 'inline-block mt-0.5 text-xs font-medium text-red-700 bg-red-50 px-1.5 py-0.5 rounded border border-red-200';
+        levelEl.innerText = '절대 수축 영역 (Contractionary)';
+      }
+
+      // Velocity
+      const velPrefix = point.vel >= 0 ? '+' : '';
+      document.getElementById('metric-vel').innerText = velPrefix + point.vel.toFixed(2);
+      document.getElementById('metric-vel').className = `text-2xl sm:text-3xl font-black num-tabular font-mono ${point.vel >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+      document.getElementById('metric-vel-status').innerText = point.vel >= 0 ? '방향성: 전월비 확장 유지' : '방향성: 전월비 위축 전환';
+
+      // Acceleration
+      const accPrefix = point.acc >= 0 ? '+' : '';
+      document.getElementById('metric-acc').innerText = accPrefix + point.acc.toFixed(2);
+      document.getElementById('metric-acc').className = `text-2xl sm:text-3xl font-black num-tabular font-mono ${point.acc >= 0 ? 'text-emerald-600' : 'text-amber-600'}`;
+      const accEl = document.getElementById('metric-acc-status');
+      if (point.acc >= 0) {
+        accEl.className = 'inline-block mt-0.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200';
+        accEl.innerText = '가속 탄력 (Convex 상향 전환)';
+      } else {
+        accEl.className = 'inline-block mt-0.5 text-xs font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200';
+        accEl.innerText = '감속 전환 (Concave 둔화 경고)';
+      }
+
+      // Playbook text
+      const pTag = document.getElementById('playbook-tag');
+      pTag.className = `text-xs font-mono font-bold px-2 py-0.5 rounded border ${spec.tagClass}`;
+      pTag.innerText = spec.tag;
+      document.getElementById('playbook-desc').innerHTML = spec.desc;
+      document.getElementById('playbook-action').innerText = spec.action;
+
+      // Asset weights
+      document.getElementById('weight-stocks-val').innerText = spec.weights.stocks + '%';
+      document.getElementById('bar-stocks').style.width = spec.weights.stocks + '%';
+
+      document.getElementById('weight-bonds-val').innerText = spec.weights.bonds + '%';
+      document.getElementById('bar-bonds').style.width = spec.weights.bonds + '%';
+
+      document.getElementById('weight-cmd-val').innerText = spec.weights.cmd + '%';
+      document.getElementById('bar-cmd').style.width = spec.weights.cmd + '%';
+
+      document.getElementById('weight-cash-val').innerText = spec.weights.cash + '%';
+      document.getElementById('bar-cash').style.width = spec.weights.cash + '%';
+
+      // Sync simulator sliders
+      document.getElementById('slider-vel').value = point.vel;
+      document.getElementById('slider-acc').value = point.acc;
+      document.getElementById('txt-slider-vel').innerText = velPrefix + point.vel.toFixed(2);
+      document.getElementById('txt-slider-acc').innerText = accPrefix + point.acc.toFixed(2);
+      updateSimulatorVerdict(point.vel, point.acc);
+
+      // Refresh Chart
+      renderChart();
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('chart-compass').getContext('2d');
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      if (chartMode === 'phase') {
+        document.getElementById('quadrant-overlay').classList.remove('hidden');
+
+        // Past trajectory points up to currentStepIndex
+        const pastPoints = cycleData.slice(0, currentStepIndex + 1).map(d => ({ x: d.vel, y: d.acc }));
+        const currentPt = [{ x: cycleData[currentStepIndex].vel, y: cycleData[currentStepIndex].acc }];
+
+        chartInstance = new Chart(ctx, {
+          type: 'scatter',
+          data: {
+            datasets: [
+              {
+                label: '현재 위상 위치',
+                data: currentPt,
+                backgroundColor: '#0f172a',
+                borderColor: '#ffffff',
+                borderWidth: 3,
+                pointRadius: 9,
+                pointHoverRadius: 11,
+                order: 1
+              },
+              {
+                label: '사이클 궤적 (Trajectory)',
+                data: pastPoints,
+                showLine: true,
+                borderColor: '#94a3b8',
+                borderWidth: 2,
+                borderDash: [4, 4],
+                fill: false,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#cbd5e1',
+                order: 2
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 300 },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#ffffff',
+                titleColor: '#0f172a',
+                bodyColor: '#334155',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+                padding: 10,
+                boxPadding: 4,
+                titleFont: { family: 'JetBrains Mono', size: 12, weight: 'bold' },
+                bodyFont: { family: 'JetBrains Mono', size: 11 },
+                callbacks: {
+                  label: function (context) {
+                    return `속도(ΔX): ${context.parsed.x.toFixed(2)} | 가속도(Δ²X): ${context.parsed.y.toFixed(2)}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                min: -1.6,
+                max: 1.6,
+                title: {
+                  display: true,
+                  text: '← 위축 속도 (Velocity ΔX < 0)  |  확장 속도 (Velocity ΔX > 0) →',
+                  font: { family: 'JetBrains Mono', size: 11, weight: '600' },
+                  color: '#64748b'
+                },
+                grid: {
+                  color: (context) => context.tick.value === 0 ? '#0f172a' : '#f1f5f9',
+                  lineWidth: (context) => context.tick.value === 0 ? 1.5 : 1
+                },
+                ticks: {
+                  font: { family: 'JetBrains Mono', size: 10 },
+                  color: '#64748b'
+                }
+              },
+              y: {
+                min: -1.6,
+                max: 1.6,
+                title: {
+                  display: true,
+                  text: '← 감속 피크아웃 (Accel Δ²X < 0)  |  가속 탄력 (Accel Δ²X > 0) →',
+                  font: { family: 'JetBrains Mono', size: 11, weight: '600' },
+                  color: '#64748b'
+                },
+                grid: {
+                  color: (context) => context.tick.value === 0 ? '#0f172a' : '#f1f5f9',
+                  lineWidth: (context) => context.tick.value === 0 ? 1.5 : 1
+                },
+                ticks: {
+                  font: { family: 'JetBrains Mono', size: 10 },
+                  color: '#64748b'
+                }
+              }
+            }
+          }
+        });
+
+      } else {
+        // Time-series mode
+        document.getElementById('quadrant-overlay').classList.add('hidden');
+
+        const labels = cycleData.map(d => d.month);
+        const velSeries = cycleData.map(d => d.vel);
+        const accSeries = cycleData.map(d => d.acc);
+
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: '속도 (Velocity ΔX)',
+                data: velSeries,
+                borderColor: '#0284c7',
+                backgroundColor: 'rgba(2, 132, 199, 0.05)',
+                borderWidth: 2,
+                tension: 0.25,
+                pointRadius: 3
+              },
+              {
+                label: '가속도 (Acceleration Δ²X)',
+                data: accSeries,
+                borderColor: '#d97706',
+                borderWidth: 2,
+                borderDash: [4, 4],
+                tension: 0.25,
+                pointRadius: 3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { font: { family: 'JetBrains Mono', size: 11 } }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#f1f5f9' },
+                ticks: { font: { family: 'JetBrains Mono', size: 10 } }
+              },
+              y: {
+                grid: {
+                  color: (c) => c.tick.value === 0 ? '#0f172a' : '#f1f5f9',
+                  lineWidth: (c) => c.tick.value === 0 ? 1.5 : 1
+                },
+                ticks: { font: { family: 'JetBrains Mono', size: 10 } }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function onSandboxChange() {
+      const vel = parseFloat(document.getElementById('slider-vel').value);
+      const acc = parseFloat(document.getElementById('slider-acc').value);
+
+      const velPrefix = vel >= 0 ? '+' : '';
+      const accPrefix = acc >= 0 ? '+' : '';
+
+      document.getElementById('txt-slider-vel').innerText = velPrefix + vel.toFixed(2);
+      document.getElementById('txt-slider-acc').innerText = accPrefix + acc.toFixed(2);
+
+      updateSimulatorVerdict(vel, acc);
+
+      // Also temporarily plot this point on the chart if in phase mode
+      if (chartMode === 'phase' && chartInstance) {
+        chartInstance.data.datasets[0].data = [{ x: vel, y: acc }];
+        chartInstance.update('none');
+      }
+    }
+
+    function updateSimulatorVerdict(vel, acc) {
+      let phaseKey = 1;
+      if (vel >= 0 && acc >= 0) phaseKey = 1;
+      else if (vel >= 0 && acc < 0) phaseKey = 2;
+      else if (vel < 0 && acc < 0) phaseKey = 3;
+      else phaseKey = 4;
+
+      const spec = phaseSpecs[phaseKey];
+      const badge = document.getElementById('sim-quadrant-badge');
+      badge.className = `inline-block text-xs font-mono font-bold px-2.5 py-1 rounded border mb-1 ${spec.badgeClass}`;
+      badge.innerText = spec.code;
+
+      document.getElementById('sim-verdict-title').innerText = spec.title;
+      document.getElementById('sim-verdict-desc').innerText = spec.hint;
+      document.getElementById('sim-risk-exposure').innerText = spec.riskText;
+    }
+
+    function syncSandboxToCurrent() {
+      updateDashboardToStep(7);
+    }
+
+    function resetToCurrentState() {
+      stopPlayback();
+      updateDashboardToStep(7);
+    }
+
+    function stepCycle(dir) {
+      stopPlayback();
+      let next = currentStepIndex + dir;
+      if (next < 0) next = cycleData.length - 1;
+      if (next >= cycleData.length) next = 0;
+      updateDashboardToStep(next);
+    }
+
+    function togglePlayback() {
+      if (isPlaying) {
+        stopPlayback();
+      } else {
+        startPlayback();
+      }
+    }
+
+    function startPlayback() {
+      isPlaying = true;
+      document.getElementById('icon-play').setAttribute('data-lucide', 'pause');
+      document.getElementById('txt-play').innerText = '일시 정지';
+      lucide.createIcons();
+
+      playInterval = setInterval(() => {
+        let next = (currentStepIndex + 1) % cycleData.length;
+        updateDashboardToStep(next);
+      }, 1500);
+    }
+
+    function stopPlayback() {
+      isPlaying = false;
+      if (playInterval) clearInterval(playInterval);
+      document.getElementById('icon-play').setAttribute('data-lucide', 'play');
+      document.getElementById('txt-play').innerText = '사이클 재생';
+      lucide.createIcons();
+    }
+
+    function setChartMode(mode) {
+      chartMode = mode;
+      const btnPhase = document.getElementById('btn-mode-phase');
+      const btnTs = document.getElementById('btn-mode-ts');
+
+      if (mode === 'phase') {
+        btnPhase.className = 'px-2.5 py-1 rounded bg-slate-900 text-white font-bold transition';
+        btnTs.className = 'px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition';
+      } else {
+        btnTs.className = 'px-2.5 py-1 rounded bg-slate-900 text-white font-bold transition';
+        btnPhase.className = 'px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition';
+      }
+      renderChart();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      updateDashboardToStep(7); // default at current
+    });
+  </script>
+</body>
+
+</html>

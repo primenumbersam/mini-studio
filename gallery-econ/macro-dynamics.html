@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Dynamics vs. Economic Equilibrium — Interactive Lab</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            950: '#090d16'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- KaTeX for Mathematical Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #38bdf8;
+            margin-top: -5px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            transition: transform 0.1s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .katex-display {
+            margin: 0.75em 0 !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-sky-200 selection:text-sky-900">
+
+    <!-- Top Navigation / Header -->
+    <header class="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-[0_0_12px_#f43f5e]"></div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                        System Dynamics &amp; The Illusion of Economic Equilibrium
+                    </h1>
+                    <p class="text-xs text-slate-500 font-mono">
+                        Harmonic Oscillators, Damping Mechanics, and Why Mean Reversion Fails in Financial Markets
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                <span class="px-2.5 py-1 text-xs font-mono rounded-md bg-white border border-slate-200 text-sky-600">
+                    RK4 ODE Solver
+                </span>
+                <button id="btn-reset-all" class="px-3 py-1.5 text-xs font-medium rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition">
+                    Reset Default
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            <!-- LEFT COLUMN: Theoretical Narrative & Interactive Anatomy (5 Cols on Desktop) -->
+            <div class="lg:col-span-5 space-y-8">
+
+                <!-- Section 1: The Physics Baseline -->
+                <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-2 py-0.5 text-[11px] font-mono uppercase tracking-wider bg-sky-50 text-sky-600 border border-sky-200 rounded">
+                            01 / Natural Science Baseline
+                        </span>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-3">
+                        The Damped Driven Harmonic Oscillator
+                    </h2>
+                    <p class="text-sm text-slate-700 leading-relaxed mb-4">
+                        In classical mechanics and control theory, system dynamics models describe how state variables (stocks) evolve over time via rates of change (flows) governed by feedback loops. When a physical system is displaced from its static equilibrium $x_{eq}$, its trajectory is governed by a second-order differential equation balancing inertia, energy dissipation (damping), and a restoring force:
+                    </p>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4 text-center">
+                        $$m\frac{d^2x}{dt^2} + c\frac{dx}{dt} + k(x - x_{eq}) = F(t)$$
+                    </div>
+
+                    <p class="text-sm text-slate-700 leading-relaxed mb-4">
+                        Normalizing by mass $m$ yields the universal oscillator equation parameterized by the undamped natural frequency $\omega_0 = \sqrt{k/m}$ and the dimensionless <strong>damping ratio</strong> $\zeta = \frac{c}{2\sqrt{mk}}$:
+                    </p>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4 text-center">
+                        $$\frac{d^2x}{dt^2} + 2\zeta\omega_0\frac{dx}{dt} + \omega_0^2(x - x_{eq}) = \frac{F(t)}{m}$$
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 leading-relaxed">
+                        <strong class="text-amber-600 block mb-1">Strict Preconditions for Equilibrium Convergence:</strong>
+                        For a disturbed system to exhibit reliable <em>mean reversion</em> back to $x_{eq}$, three physical laws must hold simultaneously:
+                        <ol class="list-decimal list-inside mt-1.5 space-y-1 text-slate-700">
+                            <li><strong>Positive Damping ($\zeta > 0$):</strong> Friction must strictly dissipate kinetic energy out of the system.</li>
+                            <li><strong>Time-Invariant Restoring Force ($k > 0$):</strong> Hooke's law elasticity must remain intact regardless of displacement magnitude.</li>
+                            <li><strong>Stationary Reference ($dx_{eq}/dt = 0$):</strong> The attractor itself must not move in response to the system's trajectory.</li>
+                        </ol>
+                    </div>
+                </section>
+
+                <!-- Section 2: Domain Mapping Table -->
+                <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-2 py-0.5 text-[11px] font-mono uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-200 rounded">
+                            02 / Structural Mapping
+                        </span>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-3">
+                        Physics vs. Financial Market Mechanics
+                    </h2>
+                    <p class="text-sm text-slate-700 leading-relaxed mb-4">
+                        Mainstream neoclassical economics (such as DSGE models) and quantitative mean-reversion strategies implicitly assume financial markets behave like an underdamped ($0 < \zeta < 1$) or critically damped ($\zeta = 1$) physical oscillator. Comparing the parameters exposes why this analogy breaks down:
+                    </p>
+
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-mono">
+                                    <th class="p-3">Symbol</th>
+                                    <th class="p-3">Physical Mechanics</th>
+                                    <th class="p-3">Mainstream Economics</th>
+                                    <th class="p-3 text-rose-600">Real Market Dynamics</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white">
+                                <tr>
+                                    <td class="p-3 font-mono font-semibold text-sky-600">$x(t)$</td>
+                                    <td class="p-3 text-slate-700">Displacement from rest</td>
+                                    <td class="p-3 text-slate-700">Price deviation from fundamental value</td>
+                                    <td class="p-3 text-slate-800">Valuation spread driven by liquidity flows</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-semibold text-sky-600">$m$</td>
+                                    <td class="p-3 text-slate-700">Inertial mass (constant)</td>
+                                    <td class="p-3 text-slate-700">Capital allocation friction</td>
+                                    <td class="p-3 text-slate-800">Endogenous institutional herd momentum</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-semibold text-sky-600">$c \text{ or } \zeta$</td>
+                                    <td class="p-3 text-slate-700">Viscous damping ($\zeta > 0$, dissipates energy)</td>
+                                    <td class="p-3 text-slate-700">Stabilizing arbitrage &amp; rational profit-taking</td>
+                                    <td class="p-3 text-rose-700 font-medium">Often Negative ($\zeta < 0$): FOMO, margin calls, gamma squeezes inject energy</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-semibold text-sky-600">$k$</td>
+                                    <td class="p-3 text-slate-700">Spring constant ($F = -kx$)</td>
+                                    <td class="p-3 text-slate-700">Value buying / Supply-demand elasticity</td>
+                                    <td class="p-3 text-rose-700 font-medium">State-dependent $k(x)$: snaps to $0$ when liquidity evaporates in crashes</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-semibold text-sky-600">$x_{eq}$</td>
+                                    <td class="p-3 text-slate-700">Fixed anchor point ($x_{eq}=0$)</td>
+                                    <td class="p-3 text-slate-700">Exogenous natural rate / Fundamental value</td>
+                                    <td class="p-3 text-rose-700 font-medium">Reflexive &amp; path-dependent: price alters fundamentals ($dx_{eq}/dt \neq 0$)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Section 3: The Three Failure Modes of Mean Reversion -->
+                <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-[11px] font-mono uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-200 rounded">
+                            03 / Why Equilibrium Models Fail
+                        </span>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900">
+                        Three Structural Mechanisms Preventing Mean Reversion
+                    </h2>
+
+                    <!-- Failure Mode 1 -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-rose-300 transition">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <h3 class="text-sm font-bold text-rose-600">
+                                1. Negative Damping ($\zeta < 0$) &amp; Positive Feedback Loops
+                            </h3>
+                            <span class="text-[11px] font-mono text-slate-500">$e^{-\zeta\omega_0 t} \to \infty$</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed">
+                            In physics, drag opposes velocity ($F_d = -c\dot{x}$). In financial markets, rapid price velocity ($\dot{x}$) frequently triggers pro-cyclical feedback: rising prices expand collateral values, lower Value-at-Risk (VaR) metrics, force short-covering, and attract momentum chasers. Conversely, falling prices trigger margin calls and forced deleveraging. The damping term flips sign ($\zeta < 0$). Instead of decaying via $e^{-\zeta\omega_0 t}$, the amplitude grows exponentially until the system hits a nonlinear structural boundary.
+                        </p>
+                    </div>
+
+                    <!-- Failure Mode 2 -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-amber-300 transition">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <h3 class="text-sm font-bold text-amber-600">
+                                2. Nonlinear Elasticity Breakdown ($k(x) \to 0$)
+                            </h3>
+                            <span class="text-[11px] font-mono text-slate-500">Hooke's Limit Violation</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed">
+                            Equilibrium economics assumes that the further an asset deviates from fundamental value, the stronger the restoring force ($-kx$) exerted by value arbitrageurs. However, arbitrageurs operate with finite capital and leverage constraints. When displacement $|x|$ exceeds a critical stress threshold $x_{crit}$, market makers withdraw liquidity and value funds face redemptions. The spring snaps ($k \to 0$), eliminating the restoring force entirely and leaving the asset adrift in a new regime.
+                        </p>
+                    </div>
+
+                    <!-- Failure Mode 3 -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-purple-300 transition">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <h3 class="text-sm font-bold text-purple-600">
+                                3. Reflexivity &amp; Endogenous Attractor Drift ($dx_{eq}/dt = \alpha(x - x_{eq})$)
+                            </h3>
+                            <span class="text-[11px] font-mono text-slate-500">Soros / Hysteresis</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed">
+                            In a pendulum, swinging left does not move the ceiling hook to the left. In an economy, prolonged market dislocations directly alter the underlying fundamentals. High equity valuations enable cheap equity issuance and capital expenditure, improving fundamental earnings; prolonged currency depreciation alters domestic inflation and debt sustainability. The equilibrium point $x_{eq}(t)$ chases the state variable $x(t)$. Waiting for reversion to a historical mean results in catastrophic prediction error because the anchor itself has migrated.
+                        </p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- RIGHT COLUMN: Interactive Simulation Lab (7 Cols on Desktop, Sticky) -->
+            <div class="lg:col-span-7 lg:sticky lg:top-20 space-y-6">
+
+                <!-- Regime Preset Selector Bar -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <span class="text-[11px] font-mono uppercase tracking-wider text-sky-600 block">
+                                Interactive Differential Equation Sandbox
+                            </span>
+                            <h3 class="text-base font-bold text-slate-900">
+                                Select System Regime Preset or Customize Parameters
+                            </h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-shock" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-semibold shadow-md shadow-rose-600/20 transition flex items-center gap-1.5">
+                                <span>⚡ Inject Market Shock</span>
+                            </button>
+                            <button id="btn-pause" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono border border-slate-300 transition">
+                                Pause
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Regime Preset Buttons -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
+                        <button data-preset="mainstream" class="preset-btn text-left p-3 rounded-xl border transition bg-sky-50 border-sky-400 text-slate-900 shadow-sm">
+                            <div class="text-xs font-bold text-sky-600 mb-0.5">1. Mainstream Textbook</div>
+                            <div class="text-[11px] text-slate-500 leading-tight">Underdamped ($\zeta > 0$). Smooth mean reversion.</div>
+                        </button>
+                        <button data-preset="bubble" class="preset-btn text-left p-3 rounded-xl border transition bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700">
+                            <div class="text-xs font-bold text-rose-600 mb-0.5">2. Reflexive Bubble</div>
+                            <div class="text-[11px] text-slate-500 leading-tight">Negative damping ($\zeta < 0$). Explosive oscillation.</div>
+                        </button>
+                        <button data-preset="snap" class="preset-btn text-left p-3 rounded-xl border transition bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700">
+                            <div class="text-xs font-bold text-amber-600 mb-0.5">3. Liquidity Snap</div>
+                            <div class="text-[11px] text-slate-500 leading-tight">Restoring force $k \to 0$ beyond stress limit.</div>
+                        </button>
+                        <button data-preset="hysteresis" class="preset-btn text-left p-3 rounded-xl border transition bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700">
+                            <div class="text-xs font-bold text-purple-600 mb-0.5">4. Moving Equilibrium</div>
+                            <div class="text-[11px] text-slate-500 leading-tight">Hysteresis ($\alpha > 0$). Fundamental drifts with price.</div>
+                        </button>
+                    </div>
+
+                    <!-- Parameter Sliders Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <!-- Damping Ratio Zeta -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="slider-zeta" class="font-medium text-slate-700">Damping Ratio ($\zeta$)</label>
+                                <span id="val-zeta" class="font-mono text-sky-600 font-semibold">0.25</span>
+                            </div>
+                            <input id="slider-zeta" type="range" min="-0.35" max="1.50" step="0.01" value="0.25" class="w-full">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span class="text-rose-600">&lt;0 Amplify</span>
+                                <span>0 Undamped</span>
+                                <span class="text-emerald-600">&gt;0 Dissipate</span>
+                            </div>
+                        </div>
+
+                        <!-- Restoring Stiffness k -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="slider-k" class="font-medium text-slate-700">Restoring Force ($k$)</label>
+                                <span id="val-k" class="font-mono text-sky-600 font-semibold">2.50</span>
+                            </div>
+                            <input id="slider-k" type="range" min="0.00" max="6.00" step="0.10" value="2.50" class="w-full">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span>0 No Anchor</span>
+                                <span>Value Elasticity</span>
+                                <span>6 Rigid</span>
+                            </div>
+                        </div>
+
+                        <!-- Reflexive Drift Alpha -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="slider-alpha" class="font-medium text-slate-700">Equilibrium Drift ($\alpha$)</label>
+                                <span id="val-alpha" class="font-mono text-purple-600 font-semibold">0.00</span>
+                            </div>
+                            <input id="slider-alpha" type="range" min="0.00" max="0.80" step="0.02" value="0.00" class="w-full">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span>0 Fixed $x_{eq}$</span>
+                                <span class="text-purple-600">Hysteresis Rate</span>
+                                <span>0.8 Fast</span>
+                            </div>
+                        </div>
+
+                        <!-- Spring Snap Threshold -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="slider-snap" class="font-medium text-slate-700">Elastic Limit ($x_{crit}$)</label>
+                                <span id="val-snap" class="font-mono text-amber-600 font-semibold">OFF</span>
+                            </div>
+                            <input id="slider-snap" type="range" min="0.50" max="3.50" step="0.10" value="3.50" class="w-full">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span class="text-amber-600">0.5 Fragile</span>
+                                <span>$k \to 0$ if $|x-x_{eq}| &gt; x_{crit}$</span>
+                                <span>3.5 Off</span>
+                            </div>
+                        </div>
+
+                        <!-- External Forcing Amplitude -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="slider-force" class="font-medium text-slate-700">Exogenous Noise ($\sigma$)</label>
+                                <span id="val-force" class="font-mono text-sky-600 font-semibold">0.00</span>
+                            </div>
+                            <input id="slider-force" type="range" min="0.00" max="1.50" step="0.05" value="0.00" class="w-full">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span>0 Isolated</span>
+                                <span>Continuous Shocks</span>
+                                <span>1.5 High</span>
+                            </div>
+                        </div>
+
+                        <!-- Live Telemetry Status Badge -->
+                        <div class="flex flex-col justify-center bg-white border border-slate-200 rounded-lg px-3 py-2">
+                            <div class="text-[10px] font-mono uppercase text-slate-500">Current Regime Classification</div>
+                            <div id="regime-badge" class="text-xs font-mono font-bold text-emerald-600 truncate mt-0.5">
+                                UNDERDAMPED CONVERGENCE
+                            </div>
+                            <div id="error-metric" class="text-[11px] font-mono text-slate-500 mt-0.5">
+                                Forecast Error $|x_{actual} - x_{DSGE}|$: <span class="text-slate-900 font-semibold">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization Canvases -->
+                <div class="grid grid-cols-1 gap-6">
+                    
+                    <!-- Chart 1: Time Series Trajectory -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900">
+                                    Time-Domain Trajectory: Actual Market vs. Mainstream Equilibrium Forecast
+                                </h4>
+                                <p class="text-xs text-slate-500">
+                                    Comparing the nonlinear system dynamics solution against a naive textbook mean-reversion model ($\zeta = 0.25, \text{fixed } x_{eq}=0$).
+                                </p>
+                            </div>
+                            <!-- Legend -->
+                            <div class="flex flex-wrap items-center gap-3 text-xs font-mono">
+                                <span class="flex items-center gap-1.5 text-sky-600">
+                                    <span class="w-3 h-0.5 bg-sky-600 inline-block"></span> Actual Market $x(t)$
+                                </span>
+                                <span class="flex items-center gap-1.5 text-emerald-600">
+                                    <span class="w-3 h-0.5 border-b border-dashed border-emerald-600 inline-block"></span> Textbook Forecast
+                                </span>
+                                <span class="flex items-center gap-1.5 text-purple-600">
+                                    <span class="w-3 h-0.5 bg-purple-600 inline-block"></span> Moving $x_{eq}(t)$
+                                </span>
+                            </div>
+                        </div>
+                        <div class="relative w-full h-64 sm:h-72 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                            <canvas id="canvas-timeseries" class="w-full h-full block"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Phase Portrait & Mechanical Analog -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Phase Space Portrait -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col">
+                            <div class="mb-3">
+                                <h4 class="text-sm font-bold text-slate-900">
+                                    Phase Space Portrait: $(x, \dot{x})$ Attractor Geometry
+                                </h4>
+                                <p class="text-xs text-slate-500">
+                                    Horizontal: Displacement $x$. Vertical: Velocity $dx/dt$. Spiraling inward = Mean Reversion; Spiraling outward = Divergence.
+                                </p>
+                            </div>
+                            <div class="relative w-full h-56 flex-grow bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                                <canvas id="canvas-phase" class="w-full h-full block"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Live Mechanical Oscillator + Energy Telemetry -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900 mb-1">
+                                    Physical Mass-Spring-Damper &amp; System Energy
+                                </h4>
+                                <p class="text-xs text-slate-500 mb-3">
+                                    Visualizing the spring integrity, anchor position $x_{eq}$, and total mechanical energy $E = \frac{1}{2}m\dot{x}^2 + \frac{1}{2}k(x-x_{eq})^2$.
+                                </p>
+                                <div class="relative w-full h-36 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mb-3">
+                                    <canvas id="canvas-spring" class="w-full h-full block"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Live Telemetry Readouts -->
+                            <div class="grid grid-cols-3 gap-2 text-center font-mono">
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-2">
+                                    <div class="text-[10px] text-slate-500">State $x(t)$</div>
+                                    <div id="readout-x" class="text-xs font-bold text-sky-600">+1.50</div>
+                                </div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-2">
+                                    <div class="text-[10px] text-slate-500">Equilibrium $x_{eq}$</div>
+                                    <div id="readout-xeq" class="text-xs font-bold text-purple-600">0.00</div>
+                                </div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-2">
+                                    <div class="text-[10px] text-slate-500">System Energy $E$</div>
+                                    <div id="readout-energy" class="text-xs font-bold text-amber-600">2.81</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        window.onload = function () {
+            // 1. Render KaTeX Mathematical Expressions
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            // 2. Simulation State & Parameters
+            const state = {
+                // Actual Market System State
+                x: 1.8,          // Initial displacement (valuation spread)
+                v: 0.0,          // Initial velocity (price momentum dx/dt)
+                xEq: 0.0,        // Current fundamental equilibrium anchor
+                springSnapped: false,
+
+                // Reference Mainstream Economic Forecast State (Fixed textbook assumptions)
+                refX: 1.8,
+                refV: 0.0,
+                refZeta: 0.25,
+                refK: 2.5,
+
+                // Tunable System Parameters
+                m: 1.0,          // Inertial mass
+                zeta: 0.25,      // Damping ratio (<0 = negative damping bubble, >0 = dissipative)
+                k: 2.50,         // Restoring spring constant
+                alpha: 0.00,     // Reflexive equilibrium drift rate (dx_eq/dt = alpha * (x - x_eq))
+                snapLimit: 3.50, // Elastic threshold; if >= 3.5, treated as OFF
+                noiseSigma: 0.00,// Stochastic exogenous driving amplitude
+
+                // Simulation Control
+                running: true,
+                t: 0,
+                dt: 0.025,
+                maxHistory: 360,
+                history: [],     // Array of { t, x, refX, xEq }
+                phaseTrail: []   // Array of { x, v }
+            };
+
+            // Initialize history buffer
+            function resetTrajectory(initialX = 1.8, initialV = 0.0) {
+                state.x = initialX;
+                state.v = initialV;
+                state.xEq = 0.0;
+                state.springSnapped = false;
+                state.refX = initialX;
+                state.refV = initialV;
+                state.t = 0;
+                state.history = [];
+                state.phaseTrail = [];
+            }
+
+            resetTrajectory();
+
+            // 3. Runge-Kutta 4th Order (RK4) ODE Solver Step
+            function stepSimulation() {
+                const dt = state.dt;
+                const m = state.m;
+
+                // Check if elastic limit is exceeded (Liquidity Snap)
+                const snapEnabled = state.snapLimit < 3.45;
+                if (snapEnabled && Math.abs(state.x - state.xEq) > state.snapLimit) {
+                    state.springSnapped = true;
+                }
+
+                const effectiveK = state.springSnapped ? 0.0 : state.k;
+                const omega0 = Math.sqrt(Math.max(0.001, effectiveK) / m);
+                // Convert zeta into damping coefficient c = 2 * zeta * sqrt(m * k_nominal)
+                const c = 2 * state.zeta * Math.sqrt(m * Math.max(0.5, state.k));
+
+                // Exogenous stochastic impulse
+                const externalForce = state.noiseSigma > 0
+                    ? state.noiseSigma * (Math.random() - 0.5) * 14.0
+                    : 0.0;
+
+                // Soft bounding wall at extreme displacement (+/- 4.2) to keep visualization legible
+                // Represents central bank circuit breaker or systemic insolvency boundary
+                function computeAcceleration(pos, vel, eqPos) {
+                    let restoring = -effectiveK * (pos - eqPos);
+                    let damping = -c * vel;
+                    // Nonlinear saturation if negative damping blows up past +/- 3.8
+                    if (Math.abs(pos) > 3.6) {
+                        damping -= 1.8 * (pos * pos - 12.96) * vel * 0.15;
+                        restoring -= 2.0 * Math.sign(pos) * (Math.abs(pos) - 3.6);
+                    }
+                    return (restoring + damping + externalForce) / m;
+                }
+
+                // RK4 integration for Actual Market (x, v, xEq)
+                const k1_x = state.v;
+                const k1_v = computeAcceleration(state.x, state.v, state.xEq);
+                const k1_eq = state.alpha * (state.x - state.xEq);
+
+                const x2 = state.x + 0.5 * dt * k1_x;
+                const v2 = state.v + 0.5 * dt * k1_v;
+                const eq2 = state.xEq + 0.5 * dt * k1_eq;
+                const k2_x = v2;
+                const k2_v = computeAcceleration(x2, v2, eq2);
+                const k2_eq = state.alpha * (x2 - eq2);
+
+                const x3 = state.x + 0.5 * dt * k2_x;
+                const v3 = state.v + 0.5 * dt * k2_v;
+                const eq3 = state.xEq + 0.5 * dt * k2_eq;
+                const k3_x = v3;
+                const k3_v = computeAcceleration(x3, v3, eq3);
+                const k3_eq = state.alpha * (x3 - eq3);
+
+                const x4 = state.x + dt * k3_x;
+                const v4 = state.v + dt * k3_v;
+                const eq4 = state.xEq + dt * k3_eq;
+                const k4_x = v4;
+                const k4_v = computeAcceleration(x4, v4, eq4);
+                const k4_eq = state.alpha * (x4 - eq4);
+
+                state.x += (dt / 6) * (k1_x + 2 * k2_x + 2 * k3_x + k4_x);
+                state.v += (dt / 6) * (k1_v + 2 * k2_v + 2 * k3_v + k4_v);
+                state.xEq += (dt / 6) * (k1_eq + 2 * k2_eq + 2 * k3_eq + k4_eq);
+
+                // Hard safety clamp
+                state.x = Math.max(-4.5, Math.min(4.5, state.x));
+                state.v = Math.max(-10.0, Math.min(10.0, state.v));
+                state.xEq = Math.max(-3.5, Math.min(3.5, state.xEq));
+
+                // RK4 integration for Mainstream Textbook Forecast (Always assumes fixed xEq=0, positive damping)
+                const refC = 2 * state.refZeta * Math.sqrt(m * state.refK);
+                function computeRefAcc(pos, vel) {
+                    return (-state.refK * pos - refC * vel) / m;
+                }
+
+                const rk1_x = state.refV;
+                const rk1_v = computeRefAcc(state.refX, state.refV);
+                const rk2_x = state.refV + 0.5 * dt * rk1_v;
+                const rk2_v = computeRefAcc(state.refX + 0.5 * dt * rk1_x, rk2_x);
+                const rk3_x = state.refV + 0.5 * dt * rk2_v;
+                const rk3_v = computeRefAcc(state.refX + 0.5 * dt * rk2_x, rk3_x);
+                const rk4_x = state.refV + dt * rk3_v;
+                const rk4_v = computeRefAcc(state.refX + dt * rk3_x, rk4_x);
+
+                state.refX += (dt / 6) * (rk1_x + 2 * rk2_x + 2 * rk3_x + rk4_x);
+                state.refV += (dt / 6) * (rk1_v + 2 * rk2_v + 2 * rk3_v + rk4_v);
+
+                state.t += dt;
+
+                // Record History
+                state.history.push({
+                    t: state.t,
+                    x: state.x,
+                    refX: state.refX,
+                    xEq: state.xEq
+                });
+                if (state.history.length > state.maxHistory) {
+                    state.history.shift();
+                }
+
+                state.phaseTrail.push({ x: state.x, v: state.v });
+                if (state.phaseTrail.length > 260) {
+                    state.phaseTrail.shift();
+                }
+            }
+
+            // 4. Canvas Context Setup & Responsive Sizing
+            const tsCanvas = document.getElementById('canvas-timeseries');
+            const phaseCanvas = document.getElementById('canvas-phase');
+            const springCanvas = document.getElementById('canvas-spring');
+
+            const tsCtx = tsCanvas.getContext('2d');
+            const phaseCtx = phaseCanvas.getContext('2d');
+            const springCtx = springCanvas.getContext('2d');
+
+            function resizeCanvases() {
+                const dpr = window.devicePixelRatio || 1;
+                [tsCanvas, phaseCanvas, springCanvas].forEach(canvas => {
+                    const rect = canvas.parentElement.getBoundingClientRect();
+                    canvas.width = rect.width * dpr;
+                    canvas.height = rect.height * dpr;
+                    const ctx = canvas.getContext('2d');
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                });
+            }
+
+            window.addEventListener('resize', resizeCanvases);
+            resizeCanvases();
+
+            // 5. Drawing Routine: Time-Series Canvas
+            function drawTimeSeries() {
+                const w = tsCanvas.parentElement.clientWidth;
+                const h = tsCanvas.parentElement.clientHeight;
+                tsCtx.clearRect(0, 0, w, h);
+
+                const midY = h / 2;
+                const scaleY = (h * 0.40) / 3.5; // Maps [-3.5, +3.5] to vertical range
+
+                // Draw Subtle Grid Lines
+                tsCtx.strokeStyle = '#e2e8f0';
+                tsCtx.lineWidth = 1;
+                for (let val = -3; val <= 3; val += 1.5) {
+                    const y = midY - val * scaleY;
+                    tsCtx.beginPath();
+                    tsCtx.moveTo(0, y);
+                    tsCtx.lineTo(w, y);
+                    tsCtx.stroke();
+
+                    tsCtx.fillStyle = '#64748b';
+                    tsCtx.font = '10px "JetBrains Mono", monospace';
+                    tsCtx.fillText((val > 0 ? '+' : '') + val.toFixed(1), 8, y - 4);
+                }
+
+                // Draw Elastic Snap Threshold Lines if active
+                if (state.snapLimit < 3.45) {
+                    const upperSnapY = midY - (state.xEq + state.snapLimit) * scaleY;
+                    const lowerSnapY = midY - (state.xEq - state.snapLimit) * scaleY;
+                    tsCtx.save();
+                    tsCtx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
+                    tsCtx.setLineDash([4, 4]);
+                    tsCtx.beginPath();
+                    tsCtx.moveTo(0, upperSnapY);
+                    tsCtx.lineTo(w, upperSnapY);
+                    tsCtx.moveTo(0, lowerSnapY);
+                    tsCtx.lineTo(w, lowerSnapY);
+                    tsCtx.stroke();
+                    tsCtx.restore();
+                }
+
+                const len = state.history.length;
+                if (len < 2) return;
+
+                const stepX = w / (state.maxHistory - 1);
+
+                // 1) Draw Moving Equilibrium xEq(t) (Purple Solid)
+                tsCtx.save();
+                tsCtx.strokeStyle = '#9333ea';
+                tsCtx.lineWidth = 1.75;
+                tsCtx.beginPath();
+                for (let i = 0; i < len; i++) {
+                    const px = i * stepX;
+                    const py = midY - state.history[i].xEq * scaleY;
+                    if (i === 0) tsCtx.moveTo(px, py);
+                    else tsCtx.lineTo(px, py);
+                }
+                tsCtx.stroke();
+                tsCtx.restore();
+
+                // 2) Draw Mainstream Textbook Forecast (Emerald Dashed)
+                tsCtx.save();
+                tsCtx.strokeStyle = '#059669';
+                tsCtx.lineWidth = 1.75;
+                tsCtx.setLineDash([5, 5]);
+                tsCtx.beginPath();
+                for (let i = 0; i < len; i++) {
+                    const px = i * stepX;
+                    const py = midY - state.history[i].refX * scaleY;
+                    if (i === 0) tsCtx.moveTo(px, py);
+                    else tsCtx.lineTo(px, py);
+                }
+                tsCtx.stroke();
+                tsCtx.restore();
+
+                // 3) Draw Actual Market Trajectory x(t) (Sky Blue or Rose Red if diverging)
+                const isDiverging = state.zeta < 0 || state.springSnapped;
+                tsCtx.save();
+                tsCtx.strokeStyle = isDiverging ? '#e11d48' : '#0284c7';
+                tsCtx.lineWidth = 2.5;
+                tsCtx.beginPath();
+                for (let i = 0; i < len; i++) {
+                    const px = i * stepX;
+                    const py = midY - state.history[i].x * scaleY;
+                    if (i === 0) tsCtx.moveTo(px, py);
+                    else tsCtx.lineTo(px, py);
+                }
+                tsCtx.stroke();
+
+                // Leading Glow Dot
+                const lastPt = state.history[len - 1];
+                const lastX = (len - 1) * stepX;
+                const lastY = midY - lastPt.x * scaleY;
+                tsCtx.fillStyle = isDiverging ? '#e11d48' : '#0284c7';
+                tsCtx.beginPath();
+                tsCtx.arc(lastX, lastY, 4.5, 0, Math.PI * 2);
+                tsCtx.fill();
+                tsCtx.restore();
+            }
+
+            // 6. Drawing Routine: Phase Portrait (x vs dx/dt)
+            function drawPhaseSpace() {
+                const w = phaseCanvas.parentElement.clientWidth;
+                const h = phaseCanvas.parentElement.clientHeight;
+                phaseCtx.clearRect(0, 0, w, h);
+
+                const cx = w / 2;
+                const cy = h / 2;
+                const scaleX = (w * 0.40) / 3.5;
+                const scaleV = (h * 0.40) / 6.0;
+
+                // Axes
+                phaseCtx.strokeStyle = '#cbd5e1';
+                phaseCtx.lineWidth = 1;
+                phaseCtx.beginPath();
+                phaseCtx.moveTo(0, cy);
+                phaseCtx.lineTo(w, cy);
+                phaseCtx.moveTo(cx, 0);
+                phaseCtx.lineTo(cx, h);
+                phaseCtx.stroke();
+
+                // Labels
+                phaseCtx.fillStyle = '#64748b';
+                phaseCtx.font = '10px "JetBrains Mono", monospace';
+                phaseCtx.fillText('Displacement x', w - 95, cy - 6);
+                phaseCtx.fillText('Velocity dx/dt', cx + 6, 14);
+
+                // Draw Current Equilibrium Attractor Crosshair (xEq, 0)
+                const eqX = cx + state.xEq * scaleX;
+                phaseCtx.strokeStyle = '#9333ea';
+                phaseCtx.lineWidth = 1.5;
+                phaseCtx.beginPath();
+                phaseCtx.arc(eqX, cy, 5, 0, Math.PI * 2);
+                phaseCtx.stroke();
+
+                // Phase Trajectory Trail
+                const len = state.phaseTrail.length;
+                if (len < 2) return;
+
+                for (let i = 1; i < len; i++) {
+                    const alpha = i / len;
+                    const p0 = state.phaseTrail[i - 1];
+                    const p1 = state.phaseTrail[i];
+
+                    phaseCtx.strokeStyle = state.zeta < 0
+                        ? `rgba(225, 29, 72, ${alpha * 0.9})`
+                        : `rgba(2, 132, 199, ${alpha * 0.9})`;
+                    phaseCtx.lineWidth = 2;
+                    phaseCtx.beginPath();
+                    phaseCtx.moveTo(cx + p0.x * scaleX, cy - p0.v * scaleV);
+                    phaseCtx.lineTo(cx + p1.x * scaleX, cy - p1.v * scaleV);
+                    phaseCtx.stroke();
+                }
+
+                // Current Phase Head
+                const head = state.phaseTrail[len - 1];
+                phaseCtx.fillStyle = '#0f172a';
+                phaseCtx.beginPath();
+                phaseCtx.arc(cx + head.x * scaleX, cy - head.v * scaleV, 4, 0, Math.PI * 2);
+                phaseCtx.fill();
+            }
+
+            // 7. Drawing Routine: Physical Mass-Spring-Damper Visualization
+            function drawMechanicalSpring() {
+                const w = springCanvas.parentElement.clientWidth;
+                const h = springCanvas.parentElement.clientHeight;
+                springCtx.clearRect(0, 0, w, h);
+
+                const cy = h * 0.55;
+                const cx = w / 2;
+                const scaleX = (w * 0.36) / 3.5;
+
+                // Track Baseline
+                springCtx.strokeStyle = '#cbd5e1';
+                springCtx.lineWidth = 2;
+                springCtx.beginPath();
+                springCtx.moveTo(20, cy + 20);
+                springCtx.lineTo(w - 20, cy + 20);
+                springCtx.stroke();
+
+                // Equilibrium Anchor Position (xEq)
+                const anchorX = cx + state.xEq * scaleX;
+                const massX = cx + state.x * scaleX;
+
+                // Draw Moving Anchor Pillar
+                springCtx.strokeStyle = '#9333ea';
+                springCtx.lineWidth = 2;
+                springCtx.beginPath();
+                springCtx.moveTo(anchorX, cy - 32);
+                springCtx.lineTo(anchorX, cy + 20);
+                springCtx.stroke();
+
+                springCtx.fillStyle = '#9333ea';
+                springCtx.font = '10px "JetBrains Mono", monospace';
+                springCtx.textAlign = 'center';
+                springCtx.fillText('Anchor x_eq', anchorX, cy - 38);
+
+                // Draw Spring Coils between AnchorX and MassX
+                if (!state.springSnapped && state.k > 0.05) {
+                    const coils = 12;
+                    const dist = massX - anchorX;
+                    springCtx.strokeStyle = '#64748b';
+                    springCtx.lineWidth = 1.75;
+                    springCtx.beginPath();
+                    springCtx.moveTo(anchorX, cy);
+                    for (let i = 1; i < coils; i++) {
+                        const px = anchorX + (dist * i) / coils;
+                        const py = cy + (i % 2 === 0 ? -9 : 9);
+                        springCtx.lineTo(px, py);
+                    }
+                    springCtx.lineTo(massX, cy);
+                    springCtx.stroke();
+                } else {
+                    // Broken / Snapped Spring Indicator
+                    springCtx.fillStyle = '#d97706';
+                    springCtx.font = '11px "JetBrains Mono", monospace';
+                    springCtx.fillText('⚡ ELASTICITY SNAPPED (k = 0)', (anchorX + massX) / 2, cy - 4);
+                }
+
+                // Draw Mass Block
+                const boxW = 36;
+                const boxH = 36;
+                springCtx.fillStyle = state.zeta < 0 ? '#e11d48' : '#0284c7';
+                springCtx.strokeStyle = '#334155';
+                springCtx.lineWidth = 1.5;
+                springCtx.beginPath();
+                springCtx.roundRect(massX - boxW / 2, cy - boxH / 2, boxW, boxH, 6);
+                springCtx.fill();
+                springCtx.stroke();
+
+                springCtx.fillStyle = '#ffffff';
+                springCtx.font = 'bold 11px "JetBrains Mono", monospace';
+                springCtx.fillText('m', massX, cy + 4);
+                springCtx.textAlign = 'left';
+            }
+
+            // 8. UI Controls & Telemetry Updates
+            const sliderZeta = document.getElementById('slider-zeta');
+            const sliderK = document.getElementById('slider-k');
+            const sliderAlpha = document.getElementById('slider-alpha');
+            const sliderSnap = document.getElementById('slider-snap');
+            const sliderForce = document.getElementById('slider-force');
+
+            const valZeta = document.getElementById('val-zeta');
+            const valK = document.getElementById('val-k');
+            const valAlpha = document.getElementById('val-alpha');
+            const valSnap = document.getElementById('val-snap');
+            const valForce = document.getElementById('val-force');
+
+            const regimeBadge = document.getElementById('regime-badge');
+            const errorMetric = document.getElementById('error-metric');
+            const readoutX = document.getElementById('readout-x');
+            const readoutXeq = document.getElementById('readout-xeq');
+            const readoutEnergy = document.getElementById('readout-energy');
+
+            function updateTelemetryUI() {
+                const effectiveK = state.springSnapped ? 0.0 : state.k;
+                const energy = 0.5 * state.m * state.v * state.v + 0.5 * effectiveK * Math.pow(state.x - state.xEq, 2);
+                const forecastErr = Math.abs(state.x - state.refX);
+
+                readoutX.textContent = (state.x >= 0 ? '+' : '') + state.x.toFixed(2);
+                readoutXeq.textContent = (state.xEq >= 0 ? '+' : '') + state.xEq.toFixed(2);
+                readoutEnergy.textContent = energy.toFixed(2);
+
+                errorMetric.innerHTML = `Forecast Error $|x_{actual} - x_{DSGE}|$: <span class="${forecastErr > 0.75 ? 'text-rose-600' : 'text-emerald-600'} font-semibold">${forecastErr.toFixed(2)}</span>`;
+
+                // Classify current regime
+                if (state.springSnapped || state.k === 0) {
+                    regimeBadge.textContent = 'ELASTICITY BREAKDOWN (NO MEAN REVERSION)';
+                    regimeBadge.className = 'text-xs font-mono font-bold text-amber-600 truncate mt-0.5';
+                } else if (state.zeta < -0.01) {
+                    regimeBadge.textContent = 'NEGATIVE DAMPING (EXPLOSIVE BUBBLE / CRASH)';
+                    regimeBadge.className = 'text-xs font-mono font-bold text-rose-600 truncate mt-0.5';
+                } else if (state.alpha > 0.05) {
+                    regimeBadge.textContent = 'REFLEXIVE HYSTERESIS (SHIFTING EQUILIBRIUM)';
+                    regimeBadge.className = 'text-xs font-mono font-bold text-purple-600 truncate mt-0.5';
+                } else if (Math.abs(state.zeta) <= 0.01) {
+                    regimeBadge.textContent = 'UNDAMPED HARMONIC OSCILLATION (PERPETUAL)';
+                    regimeBadge.className = 'text-xs font-mono font-bold text-sky-600 truncate mt-0.5';
+                } else if (state.zeta < 1.0) {
+                    regimeBadge.textContent = 'UNDERDAMPED CONVERGENCE (TEXTBOOK IDEAL)';
+                    regimeBadge.className = 'text-xs font-mono font-bold text-emerald-600 truncate mt-0.5';
+                } else {
+                    regimeBadge.textContent = 'OVERDAMPED / CRITICALLY DAMPED DECAY';
+                    regimeBadge.className = 'text-xs font-mono font-bold text-emerald-600 truncate mt-0.5';
+                }
+            }
+
+            function syncSlidersFromState() {
+                sliderZeta.value = state.zeta;
+                valZeta.textContent = state.zeta.toFixed(2);
+
+                sliderK.value = state.k;
+                valK.textContent = state.k.toFixed(2);
+
+                sliderAlpha.value = state.alpha;
+                valAlpha.textContent = state.alpha.toFixed(2);
+
+                sliderSnap.value = state.snapLimit;
+                valSnap.textContent = state.snapLimit >= 3.45 ? 'OFF' : state.snapLimit.toFixed(2);
+
+                sliderForce.value = state.noiseSigma;
+                valForce.textContent = state.noiseSigma.toFixed(2);
+            }
+
+            // Event Listeners for Sliders
+            sliderZeta.addEventListener('input', e => {
+                state.zeta = parseFloat(e.target.value);
+                valZeta.textContent = state.zeta.toFixed(2);
+            });
+            sliderK.addEventListener('input', e => {
+                state.k = parseFloat(e.target.value);
+                state.springSnapped = false;
+                valK.textContent = state.k.toFixed(2);
+            });
+            sliderAlpha.addEventListener('input', e => {
+                state.alpha = parseFloat(e.target.value);
+                valAlpha.textContent = state.alpha.toFixed(2);
+            });
+            sliderSnap.addEventListener('input', e => {
+                state.snapLimit = parseFloat(e.target.value);
+                state.springSnapped = false;
+                valSnap.textContent = state.snapLimit >= 3.45 ? 'OFF' : state.snapLimit.toFixed(2);
+            });
+            sliderForce.addEventListener('input', e => {
+                state.noiseSigma = parseFloat(e.target.value);
+                valForce.textContent = state.noiseSigma.toFixed(2);
+            });
+
+            // Preset Scenarios
+            const presets = {
+                mainstream: {
+                    zeta: 0.25, k: 2.50, alpha: 0.00, snapLimit: 3.50, noiseSigma: 0.00,
+                    initX: 2.0, initV: 0.0
+                },
+                bubble: {
+                    zeta: -0.12, k: 2.50, alpha: 0.00, snapLimit: 3.50, noiseSigma: 0.05,
+                    initX: 0.45, initV: 0.0
+                },
+                snap: {
+                    zeta: 0.15, k: 2.50, alpha: 0.00, snapLimit: 1.60, noiseSigma: 0.05,
+                    initX: 1.20, initV: 2.40
+                },
+                hysteresis: {
+                    zeta: 0.30, k: 2.20, alpha: 0.42, snapLimit: 3.50, noiseSigma: 0.10,
+                    initX: 2.40, initV: 0.50
+                }
+            };
+
+            const presetButtons = document.querySelectorAll('.preset-btn');
+            presetButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const key = btn.getAttribute('data-preset');
+                    const cfg = presets[key];
+                    if (!cfg) return;
+
+                    // Highlight active button
+                    presetButtons.forEach(b => {
+                        b.className = 'preset-btn text-left p-3 rounded-xl border transition bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700';
+                    });
+                    btn.className = 'preset-btn text-left p-3 rounded-xl border transition bg-sky-50 border-sky-400 text-slate-900 shadow-sm';
+
+                    state.zeta = cfg.zeta;
+                    state.k = cfg.k;
+                    state.alpha = cfg.alpha;
+                    state.snapLimit = cfg.snapLimit;
+                    state.noiseSigma = cfg.noiseSigma;
+
+                    syncSlidersFromState();
+                    resetTrajectory(cfg.initX, cfg.initV);
+                });
+            });
+
+            // Impulse Shock Button
+            document.getElementById('btn-shock').addEventListener('click', () => {
+                const shockDirection = state.v >= 0 ? 1 : -1;
+                state.v += shockDirection * 3.8;
+                state.refV += shockDirection * 3.8;
+            });
+
+            // Pause / Resume Button
+            const btnPause = document.getElementById('btn-pause');
+            btnPause.addEventListener('click', () => {
+                state.running = !state.running;
+                btnPause.textContent = state.running ? 'Pause' : 'Resume';
+            });
+
+            // Reset All Button
+            document.getElementById('btn-reset-all').addEventListener('click', () => {
+                presetButtons[0].click();
+            });
+
+            // 9. Main Animation Loop
+            function animate() {
+                if (state.running) {
+                    stepSimulation();
+                    drawTimeSeries();
+                    drawPhaseSpace();
+                    drawMechanicalSpring();
+                    updateTelemetryUI();
+                }
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        };
+    </script>
+</body>
+</html>
